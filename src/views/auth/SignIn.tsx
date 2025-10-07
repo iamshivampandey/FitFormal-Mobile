@@ -43,9 +43,7 @@ const LoginScreen = ({ navigation }) => {
 
 
   return (
-    <SafeAreaListener onChange={()=>{}}>
-    {/* <StatusBar barStyle="dark-content" backgroundColor="transparent" /> */}
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#eee' }}>
+    <View style={styles.container}>
       <ScrollView style={styles.subContainer} bounces={false} showsVerticalScrollIndicator={false}>
         <View style={styles.Header}>
           <Text style={styles.HeaderBigText}>
@@ -169,7 +167,7 @@ const LoginScreen = ({ navigation }) => {
             <Text
               style={styles.SignUp}
               onPress={() => {
-                navigation.navigate("SignupScreen");
+                navigation.navigate("SignUp");
               }}
             >
               {strings.SING_UP}
@@ -177,9 +175,7 @@ const LoginScreen = ({ navigation }) => {
           </Text>
         </View>
       </ScrollView>
-      </SafeAreaView>
-      </SafeAreaListener>
-    
+    </View>
   );
 };
 
@@ -189,6 +185,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.whiteColor,
+    paddingTop: '20%',
   },
   subContainer: {
     flex: 1,
@@ -323,6 +320,8 @@ const styles = StyleSheet.create({
     height: 51,
     backgroundColor: Colors.lightGrey,
     width: "92%",
+    alignItems:'center',
+    justifyContent:'center'
   },
   LoginWithGoogleInput: {
     flexDirection: "row",
@@ -351,7 +350,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 12,
+    // marginTop: 12,
   },
 
   TextByLogging: {
