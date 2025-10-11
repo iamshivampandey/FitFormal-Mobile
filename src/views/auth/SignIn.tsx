@@ -7,12 +7,17 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from "react-native";
-import React, { useState } from "react";
-import { palceholders, strings } from "../../utils/string/strings";
-import { Colors } from "../../utils/colors";
-import en from "../../utils/string/en";
-import { GILROY_BOLD, GILROY_MEDIUM, GILROY_REGULAR, GILROY_SEMIBOLD } from "../../utils/fonts";
+} from 'react-native';
+import React, { useState } from 'react';
+import { palceholders, strings } from '../../utils/string/strings';
+import { Colors } from '../../utils/colors';
+import en from '../../utils/string/en';
+import {
+  GILROY_BOLD,
+  GILROY_MEDIUM,
+  GILROY_REGULAR,
+  GILROY_SEMIBOLD,
+} from '../../utils/fonts';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -21,30 +26,35 @@ import {
   SafeAreaListener,
   SafeAreaView,
 } from 'react-native-safe-area-context';
+import CustomButton from '../../components/CustomButton';
+import CustomInput from '../../components/CustomInput';
 
-const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState("");
-  const [password, setpassword] = useState("");
+const LoginScreen = ({ navigation }: any) => {
+  const [email, setEmail] = useState('');
+  const [password, setpassword] = useState('');
   const [passwordHide, setpasswordHide] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const isValid = () => {
-    if (email === "" || password === "") {
+    if (email === '' || password === '') {
       return false;
     }
     return true;
   };
 
   const onPressSignIn = async () => {
-    console.log("onPressSignIn");
+    console.log('onPressSignIn');
   };
-
-
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.subContainer} bounces={false} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.subContainer}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.Header}>
           <Text style={styles.HeaderBigText}>
             {strings.WELCOME}
@@ -60,17 +70,17 @@ const LoginScreen = ({ navigation }) => {
             {strings.ABOUT_APP_NAME}
           </Text>
         </View>
-        <View style={styles.EmailInput}>
-          <TextInput
-            style={styles.EmailText}
-            placeholder={palceholders.EMAIL_NUMBER}
-            placeholderTextColor={Colors.grey}
-            onChangeText={(text) => {
-              setEmail(text);
-            }}
-            autoCapitalize="none"
-          />
-        </View>
+        <View style={styles.EmailInput}></View>
+
+        <CustomInput
+          placeholder={palceholders.EMAIL_NUMBER}
+          value={email}
+          onChangeText={newText => {
+            setEmailError('');
+            setEmail(newText);
+          }}
+          error={emailError}
+        />
         <TouchableOpacity style={styles.PasswordInput}>
           <TextInput
             style={styles.PasswordText}
@@ -80,7 +90,7 @@ const LoginScreen = ({ navigation }) => {
             autoCapitalize="none"
             autoCorrect={false}
             enablesReturnKeyAutomatically
-            onChangeText={(text) => {
+            onChangeText={text => {
               setpassword(text);
             }}
           />
@@ -100,33 +110,25 @@ const LoginScreen = ({ navigation }) => {
             )} */}
           </TouchableOpacity>
         </TouchableOpacity>
-        <View style={styles.Login}>
-          <TouchableOpacity
-            style={[
-              styles.LoginInput,
-              {
-                backgroundColor: isValid()
-                  ? Colors.skyBlueColor
-                  : Colors.lightGrey,
-                borderColor: isValid() ? Colors.skyBlueColor : Colors.gray88,
-                borderWidth: 1,
-              },
-            ]}
-            onPress={() => onPressSignIn()}
-          >
-            <Text
-              style={[
-                styles.LoginText,
-                { color: isValid() ? Colors.whiteColor : Colors.lightGrey50 },
-              ]}
-            >
-              {strings.LOGIN}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <CustomButton
+          title={strings.LOGIN}
+          onPress={() => {
+            navigation.navigate('TabBarNavigation');
+          }}
+          style={styles.button}
+        />
+
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate("ForgotScreen");
+            navigation.navigate('ForgotScreen');
+          }}
+          style={{
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            margin: 5,
+            padding: 4,
+            width: '50%',
+            alignSelf: 'flex-end',
           }}
         >
           <Text style={styles.ForgotText}>{strings.FORGOT_PASSWORD}</Text>
@@ -137,10 +139,7 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.DividerLine} />
         </View>
         <View style={styles.LoginWithGoogleInput}>
-          <TouchableOpacity
-            style={styles.LoginWithGoogle}
-            onPress={() =>{}}
-          >
+          <TouchableOpacity style={styles.LoginWithGoogle} onPress={() => {}}>
             <View style={styles.LoginWithAppleInput}>
               {/* <VectorImage source={google_icon} style={styles.GoogleImage} /> */}
               <Text style={styles.LoginWithGoogleText}>
@@ -167,7 +166,7 @@ const LoginScreen = ({ navigation }) => {
             <Text
               style={styles.SignUp}
               onPress={() => {
-                navigation.navigate("SignUp");
+                navigation.navigate('RoleSelection');
               }}
             >
               {strings.SING_UP}
@@ -184,7 +183,7 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.whiteColor,
+    backgroundColor: Colors.background,
     paddingTop: '20%',
   },
   subContainer: {
@@ -195,140 +194,149 @@ const styles = StyleSheet.create({
   },
   HeaderBigText: {
     fontSize: 32,
-    fontWeight: "700",
-    color: Colors.blackColor,
-    textAlign: "center",
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'center',
     fontFamily: GILROY_BOLD,
     lineHeight: 44,
   },
   OmocColor: {
-    color: Colors.skyBlueColor,
+    color: Colors.warmBrownColor,
   },
   HeaderSmallText: {
     marginTop: 15,
     marginHorizontal: 40,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
   FirstTextColor: {
-    textAlign: "center",
+    textAlign: 'center',
     color: Colors.grey,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
     fontFamily: GILROY_SEMIBOLD,
     lineHeight: 24,
   },
   HeaderTextFAQ: {
-    color: Colors.blackColor,
+    color: Colors.textPrimary,
     fontSize: 14,
-    fontWeight: "400",
+    fontWeight: '400',
     marginHorizontal: 10,
     fontFamily: GILROY_REGULAR,
   },
   EmailInput: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 45,
+    borderWidth: 0.09,
   },
   EmailText: {
-    fontWeight: "400",
-    borderWidth: 0.09,
+    fontWeight: '400',
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
     height: 56,
-    width: "92%",
+    width: '92%',
     borderRadius: 24,
     fontSize: 14,
     padding: 10,
-    backgroundColor: Colors.lightGrey,
+    backgroundColor: Colors.inputBackground,
+    paddingStart: 20,
+    fontFamily: GILROY_REGULAR,
+    color: Colors.whiteColor,
+  },
+  PasswordInput: {
+    alignItems: 'center',
+    marginTop: 10,
+    flexDirection: 'row',
+    borderWidth: 0.09,
+    height: 56,
+    borderRadius: 24,
+    padding: 10,
+    backgroundColor: Colors.inputBackground,
+    width: '92%',
+    alignSelf: 'center',
+    fontWeight: '400',
+    borderColor: Colors.inputBorderColor,
+    fontSize: 14,
     paddingStart: 20,
     fontFamily: GILROY_REGULAR,
   },
-  PasswordInput: {
-    alignItems: "center",
-    marginTop: 20,
-    flexDirection: "row",
-    borderWidth: 0.09,
-    height: 56,
-    borderRadius: 24,
-    padding: 10,
-    backgroundColor: Colors.lightGrey,
-    width: "92%",
-    alignSelf: "center",
-  },
   PasswordText: {
-    fontWeight: "400",
+    fontWeight: '400',
     fontSize: 14,
     padding: 10,
-    width: "90%",
+    width: '90%',
     fontFamily: GILROY_REGULAR,
+    color: Colors.whiteColor,
   },
   ViewImg: {
     width: 25,
     height: 19,
   },
   Login: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 20,
   },
   LoginInput: {
     borderRadius: 24,
     borderWidth: 0.09,
-    width: "92%",
+    width: '92%',
     height: 51,
-    backgroundColor: Colors.lightGrey,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: 'red',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: 'grey',
   },
   LoginText: {
     fontSize: 15,
-    textAlign: "center",
+    textAlign: 'center',
     fontFamily: GILROY_MEDIUM,
   },
   ForgotText: {
-    marginTop: 15,
-    textAlign: "right",
+    textAlign: 'right',
     marginRight: 15,
     fontSize: 12,
-    fontWeight: "400",
+    fontWeight: '400',
     fontFamily: GILROY_REGULAR,
-    color: Colors.blackColor,
+    color: Colors.textPrimary,
   },
   Divider: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 20,
     marginHorizontal: 10,
   },
   DividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: '#E0E0E0',
   },
   DividerText: {
-    textAlign: "center",
+    textAlign: 'center',
     marginHorizontal: 10,
     color: Colors.grey,
     fontSize: 12,
-    fontWeight: "400",
+    fontWeight: '400',
     lineHeight: 14,
     fontFamily: GILROY_REGULAR,
   },
   Next: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 30,
   },
   LoginWithGoogle: {
     borderRadius: 24,
     borderWidth: 0.09,
     height: 51,
-    backgroundColor: Colors.lightGrey,
-    width: "92%",
-    alignItems:'center',
-    justifyContent:'center'
+    backgroundColor: Colors.inputBackground,
+    width: '92%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   LoginWithGoogleInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 20,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
   GoogleImage: {
     width: 25,
@@ -336,60 +344,69 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   LoginWithGoogleText: {
-    fontWeight: "500",
-    textAlign: "center",
+    fontWeight: '500',
+    textAlign: 'center',
     fontSize: 14,
     fontFamily: GILROY_MEDIUM,
+    color: Colors.whiteColor,
   },
   BetweenAppleGoogle: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 30,
   },
 
   LoginWithAppleInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    // marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   TextByLogging: {
-    alignItems: "center",
-    marginTop: "25%",
+    alignItems: 'center',
+    marginTop: '25%',
     marginHorizontal: 30,
   },
   TextByLoginColor: {
-    textAlign: "center",
+    textAlign: 'center',
     lineHeight: 22,
-    color: Colors.lightBlack,
+    color: Colors.textSecondary,
     fontSize: 12,
     fontFamily: GILROY_REGULAR,
   },
   TermsText: {
-    fontWeight: "400",
-    color: "black",
+    fontWeight: '400',
+    color: 'black',
     fontSize: 13,
   },
   PrivacyText: {
-    fontWeight: "400",
-    color: "black",
+    fontWeight: '400',
+    color: 'black',
     fontSize: 13,
   },
   Bottom: {
     marginTop: 25,
     marginBottom: 30,
-    alignItems: "center",
+    alignItems: 'center',
   },
   BottomText: {
-    color: Colors.mediumGrey,
-    textAlign: "center",
+    color: Colors.textPrimary,
+    textAlign: 'center',
     fontSize: 12,
-    fontWeight: "400",
+    fontWeight: '400',
     fontFamily: GILROY_REGULAR,
   },
   SignUp: {
-    color: Colors.skyBlueColor,
+    color: Colors.warmBrownColor,
     fontSize: 12,
     fontFamily: GILROY_MEDIUM,
+  },
+  button: {
+    marginTop: 20,
+    height: 51,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '92%',
+    alignSelf: 'center',
   },
 });
