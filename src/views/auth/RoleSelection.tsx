@@ -90,17 +90,17 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
         style={[
           styles.roleCard,
           isSelected && styles.selectedRoleCard,
-          { borderColor: isSelected ? role.color : Colors.inputBorderColor }
+          { borderColor: isSelected ? Colors.warmBrownColor : Colors.inputBorderColor }
         ]}
         onPress={() => handleRoleSelection(role.id)}
         activeOpacity={0.8}
       >
         <View style={styles.roleHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: role.color }]}>
+          <View style={[styles.iconContainer, { backgroundColor:  Colors.warmBrownColor }]}>
             <Text style={styles.roleIcon}>{role.icon}</Text>
           </View>
           <View style={styles.roleInfo}>
-            <Text style={[styles.roleTitle, isSelected && { color: role.color }]}>
+            <Text style={[styles.roleTitle, isSelected && { color:  Colors.warmBrownColor }]}>
               {role.title}
             </Text>
             <Text style={styles.roleDescription}>{role.description}</Text>
@@ -118,7 +118,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
         
         {isSelected && (
-          <View style={[styles.selectedIndicator, { backgroundColor: role.color }]} />
+          <View style={[styles.selectedIndicator, { backgroundColor:  Colors.warmBrownColor }]} />
         )}
       </TouchableOpacity>
     );

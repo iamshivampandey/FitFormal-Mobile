@@ -99,18 +99,15 @@ const SignUpScreen = ({ navigation, route }: any) => {
     <View style={styles.mainContainer}>
       <ScrollView style={styles.subContainer} bounces={false} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <Text style={styles.signText}>{strings.SING_UP}</Text>
-          {roleData && (
+        <Text style={styles.HeaderBigText}>
+            {strings.JOIN}
+            <Text style={styles.appName}> {strings.APP_NAME}</Text>
+          </Text>          {roleData && (
             <View style={styles.roleInfo}>
-              <Text style={styles.roleTitle}>Registering as: {roleData.title}</Text>
+              <Text style={styles.roleTitle}>Registering as {roleData.title}</Text>
               <Text style={styles.roleDescription}>{roleData.description}</Text>
             </View>
-          )}
-          <Text style={styles.subText}>
-            {strings.LOREM_IPSUM}
-            <Text style={styles.colorText}>{strings.FAQ}</Text>
-            {strings.ABOUT_APP_NAME}
-          </Text>
+          )}      
         </View>
         <View style={{ gap: 16 }}>
           <CustomInput
@@ -341,5 +338,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     borderColor: Colors.warmBrownColor,
+  },
+  HeaderBigText: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    // fontFamily: GILROY_BOLD,
+    lineHeight: 44,
+  },
+  appName: {
+    color: Colors.warmBrownColor,
   },
 });

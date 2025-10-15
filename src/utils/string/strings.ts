@@ -17,6 +17,7 @@ export enum StringKeys {
   SING_UP = 'SING_UP',
   SIGN_IN = 'SIGN_IN',
   FORGOT_PASSWORD = 'FORGOT_PASSWORD',
+  JOIN = 'JOIN',
 }
 
 export enum PlaceholderKeys {
@@ -29,6 +30,7 @@ export enum PlaceholderKeys {
 
 export const strings: Record<StringKeys, string> = {
   [StringKeys.WELCOME]: 'Welcome to',
+  [StringKeys.JOIN]: 'Join',
   [StringKeys.APP_NAME]: 'Fit Fromal',
   [StringKeys.LOREM_IPSUM]: 'Lorem ipsum dolor sit amet, ',
   [StringKeys.FAQ]: 'FAQ',
@@ -46,6 +48,7 @@ export const strings: Record<StringKeys, string> = {
   [StringKeys.SING_UP]: 'Sign Up',
   [StringKeys.SIGN_IN]: 'Sign In',
   [StringKeys.FORGOT_PASSWORD]: 'Forgot Password?',
+
 };
 
 export const palceholders: Record<PlaceholderKeys, string> = {
@@ -55,3 +58,6 @@ export const palceholders: Record<PlaceholderKeys, string> = {
   [PlaceholderKeys.USERNAME]: 'Last Name',
   [PlaceholderKeys.AGE]: 'Phone Number',
 };
+
+
+

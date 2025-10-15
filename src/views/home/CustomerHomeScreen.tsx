@@ -34,11 +34,31 @@ interface Product {
   originalPrice?: string;
   image: ImageSourcePropType;
   rating: number;
+  shopName: string;
   isNew?: boolean;
   isSale?: boolean;
 }
 
-const HomeScreen: React.FC = () => {
+interface Tailor {
+  id: string;
+  name: string;
+  rating: number;
+  distance: string;
+  specialization: string;
+  experienceYears: number;
+  priceRange: string;
+}
+
+interface Shop {
+  id: string;
+  name: string;
+  rating: number;
+  distance: string;
+  productsCount: number;
+  deliveryTime: string;
+}
+
+const CustomerHomeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const insets = useSafeAreaInsets();
@@ -63,6 +83,7 @@ const HomeScreen: React.FC = () => {
       originalPrice: '$34.99',
       image: productImages.shirt1,
       rating: 4.5,
+      shopName: 'Elite Fabrics',
       isSale: true,
     },
     {
@@ -71,6 +92,7 @@ const HomeScreen: React.FC = () => {
       price: '$89.99',
       image: productImages.shirt2,
       rating: 4.8,
+      shopName: 'Royal Textiles',
       isNew: true,
     },
     {
@@ -80,6 +102,7 @@ const HomeScreen: React.FC = () => {
       originalPrice: '$44.99',
       image: productImages.shirt3,
       rating: 4.6,
+      shopName: 'Premium Cloth House',
       isSale: true,
     },
     {
@@ -88,6 +111,7 @@ const HomeScreen: React.FC = () => {
       price: '$149.99',
       image: productImages.shirt4,
       rating: 4.7,
+      shopName: 'Elite Fabrics',
       isNew: true,
     },
     {
@@ -96,6 +120,7 @@ const HomeScreen: React.FC = () => {
       price: '$54.99',
       image: productImages.shirt5,
       rating: 4.9,
+      shopName: 'Royal Textiles',
       isNew: true,
     },
     {
@@ -105,6 +130,7 @@ const HomeScreen: React.FC = () => {
       originalPrice: '$49.99',
       image: productImages.shirt6,
       rating: 4.7,
+      shopName: 'Premium Cloth House',
       isSale: true,
     },
     {
@@ -113,7 +139,74 @@ const HomeScreen: React.FC = () => {
       price: '$44.99',
       image: productImages.shirt7,
       rating: 4.6,
+      shopName: 'Elite Fabrics',
       isNew: true,
+    },
+  ];
+
+  const nearbyTailors: Tailor[] = [
+    {
+      id: '1',
+      name: 'John Smith',
+      rating: 4.8,
+      distance: '1.2 km',
+      specialization: 'Formal Suits',
+      experienceYears: 15,
+      priceRange: '$$',
+    },
+    {
+      id: '2',
+      name: 'Michael Johnson',
+      rating: 4.9,
+      distance: '2.5 km',
+      specialization: 'Shirt & Blazers',
+      experienceYears: 10,
+      priceRange: '$$$',
+    },
+    {
+      id: '3',
+      name: 'David Williams',
+      rating: 4.7,
+      distance: '3.1 km',
+      specialization: 'Complete Formal Wear',
+      experienceYears: 20,
+      priceRange: '$$',
+    },
+    {
+      id: '4',
+      name: 'Robert Brown',
+      rating: 4.6,
+      distance: '1.8 km',
+      specialization: 'Trouser Specialist',
+      experienceYears: 8,
+      priceRange: '$',
+    },
+  ];
+
+  const nearbyShops: Shop[] = [
+    {
+      id: '1',
+      name: 'Elite Fabrics',
+      rating: 4.7,
+      distance: '0.8 km',
+      productsCount: 250,
+      deliveryTime: '1-2 days',
+    },
+    {
+      id: '2',
+      name: 'Royal Textiles',
+      rating: 4.8,
+      distance: '1.5 km',
+      productsCount: 180,
+      deliveryTime: '2-3 days',
+    },
+    {
+      id: '3',
+      name: 'Premium Cloth House',
+      rating: 4.9,
+      distance: '2.0 km',
+      productsCount: 320,
+      deliveryTime: '1-2 days',
     },
   ];
 
@@ -146,6 +239,7 @@ const HomeScreen: React.FC = () => {
       </View>
       <View style={styles.productInfo}>
         <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.shopName} numberOfLines={1}>{item.shopName}</Text>
         <View style={styles.priceContainer}>
           <Text style={styles.productPrice}>{item.price}</Text>
           {item.originalPrice && (
@@ -159,22 +253,47 @@ const HomeScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  const renderBanner = () => (
-    <View style={styles.banner}>
-      <View style={styles.bannerContent}>
-            <Text style={styles.bannerTitle}>Formal Wear Sale!</Text>
-            <Text style={styles.bannerSubtitle}>Up to 40% OFF</Text>
-            <Text style={styles.bannerDescription}>
-              Premium formal fabrics with custom tailoring services
-            </Text>
-        <CustomButton
-          title="Shop Now"
-          onPress={() => {}}
-          style={styles.bannerButton}
-          variant="outline"
-        />
+  const renderTailor = ({ item }: { item: Tailor }) => (
+    <TouchableOpacity style={styles.tailorCard}>
+      <View style={styles.tailorAvatar}>
+        <Text style={styles.tailorAvatarText}>{item.name.charAt(0)}</Text>
       </View>
-    </View>
+      <View style={styles.tailorInfo}>
+        <Text style={styles.tailorName}>{item.name}</Text>
+        <Text style={styles.tailorSpecialization}>{item.specialization}</Text>
+        <View style={styles.tailorDetails}>
+          <Text style={styles.tailorRating}>⭐ {item.rating}</Text>
+          <Text style={styles.tailorDistance}>📍 {item.distance}</Text>
+        </View>
+        <View style={styles.tailorFooter}>
+          <Text style={styles.tailorExperience}>{item.experienceYears} yrs exp</Text>
+          <Text style={styles.tailorPrice}>{item.priceRange}</Text>
+        </View>
+      </View>
+      <TouchableOpacity style={styles.bookButton}>
+        <Text style={styles.bookButtonText}>Book</Text>
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+
+  const renderShop = ({ item }: { item: Shop }) => (
+    <TouchableOpacity style={styles.shopCard}>
+      <View style={styles.shopIcon}>
+        <Text style={styles.shopIconText}>🏪</Text>
+      </View>
+      <View style={styles.shopInfo}>
+        <Text style={styles.shopName}>{item.name}</Text>
+        <View style={styles.shopDetails}>
+          <Text style={styles.shopRating}>⭐ {item.rating}</Text>
+          <Text style={styles.shopDistance}>📍 {item.distance}</Text>
+        </View>
+        <Text style={styles.shopProducts}>{item.productsCount} products</Text>
+        <Text style={styles.shopDelivery}>🚚 {item.deliveryTime}</Text>
+      </View>
+      <TouchableOpacity style={styles.visitButton}>
+        <Text style={styles.visitButtonText}>Visit</Text>
+      </TouchableOpacity>
+    </TouchableOpacity>
   );
 
   return (
@@ -198,7 +317,7 @@ const HomeScreen: React.FC = () => {
           <View style={styles.searchContainer}>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search formal fabrics..."
+              placeholder="Search fabrics, tailors, shops..."
               placeholderTextColor={Colors.grey}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -208,9 +327,6 @@ const HomeScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Banner
-        {renderBanner()} */}
 
         {/* Categories */}
         <View style={styles.section}>
@@ -243,6 +359,37 @@ const HomeScreen: React.FC = () => {
           />
         </View>
 
+        {/* Find Tailors */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Find Tailors Near You</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={nearbyTailors}
+            renderItem={renderTailor}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tailorsList}
+          />
+        </View>
+
+        {/* Nearby Shops */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Nearby Shops</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          {nearbyShops.map((shop) => (
+            <View key={shop.id}>{renderShop({ item: shop })}</View>
+          ))}
+        </View>
+
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -260,8 +407,8 @@ const HomeScreen: React.FC = () => {
               <Text style={styles.quickActionText}>Track Orders</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>🎁</Text>
-              <Text style={styles.quickActionText}>Tailor + Shop</Text>
+              <Text style={styles.quickActionIcon}>❤️</Text>
+              <Text style={styles.quickActionText}>Favorites</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -285,11 +432,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
-  },
-  greeting: {
-    fontSize: 16,
-    color: Colors.grey,
-    marginBottom: 4,
   },
   userName: {
     fontSize: 24,
@@ -328,42 +470,6 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     fontSize: 18,
-  },
-  banner: {
-    marginHorizontal: 20,
-    marginBottom: 25,
-    backgroundColor: Colors.warmBrownColor,
-    borderRadius: 20,
-    padding: 25,
-    alignItems: 'center',
-  },
-  bannerContent: {
-    alignItems: 'center',
-  },
-  bannerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: Colors.whiteColor,
-    marginBottom: 5,
-  },
-  bannerSubtitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: Colors.whiteColor,
-    marginBottom: 10,
-  },
-  bannerDescription: {
-    fontSize: 14,
-    color: Colors.whiteColor,
-    textAlign: 'center',
-    marginBottom: 20,
-    opacity: 0.9,
-  },
-  bannerButton: {
-    backgroundColor: 'transparent',
-    borderColor: Colors.whiteColor,
-    borderWidth: 2,
-    width: 120,
   },
   section: {
     marginBottom: 30,
@@ -469,6 +575,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  shopName: {
+    fontSize: 12,
+    color: Colors.grey,
     marginBottom: 8,
   },
   priceContainer: {
@@ -494,6 +605,144 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 12,
     color: Colors.grey,
+  },
+  tailorsList: {
+    paddingHorizontal: 15,
+  },
+  tailorCard: {
+    width: width * 0.75,
+    backgroundColor: Colors.inputBackground,
+    borderRadius: 15,
+    padding: 15,
+    marginHorizontal: 8,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tailorAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.warmBrownColor,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 15,
+  },
+  tailorAvatarText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.whiteColor,
+  },
+  tailorInfo: {
+    flex: 1,
+  },
+  tailorName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  tailorSpecialization: {
+    fontSize: 12,
+    color: Colors.grey,
+    marginBottom: 8,
+  },
+  tailorDetails: {
+    flexDirection: 'row',
+    marginBottom: 6,
+  },
+  tailorRating: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginRight: 15,
+  },
+  tailorDistance: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  tailorFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  tailorExperience: {
+    fontSize: 11,
+    color: Colors.grey,
+  },
+  tailorPrice: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.warmBrownColor,
+  },
+  bookButton: {
+    backgroundColor: Colors.warmBrownColor,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  bookButtonText: {
+    color: Colors.whiteColor,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  shopCard: {
+    backgroundColor: Colors.inputBackground,
+    borderRadius: 15,
+    padding: 15,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shopIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 15,
+  },
+  shopIconText: {
+    fontSize: 24,
+  },
+  shopInfo: {
+    flex: 1,
+  },
+  shopDetails: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  shopRating: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginRight: 15,
+  },
+  shopDistance: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  shopProducts: {
+    fontSize: 12,
+    color: Colors.grey,
+    marginBottom: 2,
+  },
+  shopDelivery: {
+    fontSize: 12,
+    color: Colors.grey,
+  },
+  visitButton: {
+    backgroundColor: Colors.warmBrownColor,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  visitButtonText: {
+    color: Colors.whiteColor,
+    fontSize: 14,
+    fontWeight: '600',
   },
   quickActions: {
     flexDirection: 'row',
@@ -522,4 +771,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default CustomerHomeScreen;
+

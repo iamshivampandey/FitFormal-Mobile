@@ -1,56 +1,269 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../utils/colors';
+import { useAuth } from '../context/AuthContext';
 import HomeStackNavigation from './HomeStackNavigation';
 import ProfileStackNavigation from './ProfileStackNavigation';
+import CartStackNavigation from './CartStackNavigation';
+import ShopStackNavigation from './ShopStackNavigation';
 
 export default function TabBarNavigation(): React.JSX.Element {
-    const TabBar = createBottomTabNavigator();
+  const TabBar = createBottomTabNavigator();
+  const insets = useSafeAreaInsets();
+  const { userRole } = useAuth();
+
+  // Calculate responsive tab bar height
+  const tabBarHeight = Platform.OS === 'ios' ? 65 + insets.bottom : 70;
+
+  const commonScreenOptions = {
+    headerShown: false,
+    tabBarStyle: {
+      backgroundColor: Colors.whiteColor,
+      borderTopWidth: 0,
+      height: tabBarHeight,
+      paddingBottom: Platform.OS === 'ios' ? insets.bottom : 12,
+      paddingTop: 12,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      position: 'absolute' as 'absolute',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: -4,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 10,
+    },
+    tabBarActiveTintColor: Colors.warmBrownColor,
+    tabBarInactiveTintColor: Colors.blackColor,
+    tabBarLabelStyle: {
+      fontSize: 12,
+      fontWeight: '600' as '600',
+    },
+  };
+
+  // Customer tabs
+  if (userRole === 'customer') {
+    return (
+      <TabBar.Navigator screenOptions={commonScreenOptions}>
+        <TabBar.Screen
+          name="Home"
+          component={HomeStackNavigation}
+          options={{
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'home' : 'home-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Cart"
+          component={CartStackNavigation}
+          options={{
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'cart' : 'cart-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Profile"
+          component={ProfileStackNavigation}
+          options={{
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'person' : 'person-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+      </TabBar.Navigator>
+    );
+  }
+
+  // Tailor tabs
+  if (userRole === 'tailor') {
+    return (
+      <TabBar.Navigator screenOptions={commonScreenOptions}>
+        <TabBar.Screen
+          name="Dashboard"
+          component={HomeStackNavigation}
+          options={{
+            tabBarLabel: 'Dashboard',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'grid' : 'grid-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Bookings"
+          component={CartStackNavigation}
+          options={{
+            tabBarLabel: 'Bookings',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'calendar' : 'calendar-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Orders"
+          component={CartStackNavigation}
+          options={{
+            tabBarLabel: 'Orders',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'cut' : 'cut-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Profile"
+          component={ProfileStackNavigation}
+          options={{
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'person' : 'person-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+      </TabBar.Navigator>
+    );
+  }
+
+  // Shop + Tailor tabs
+  if (userRole === 'tailor_shop') {
+    return (
+      <TabBar.Navigator screenOptions={commonScreenOptions}>
+        <TabBar.Screen
+          name="Dashboard"
+          component={HomeStackNavigation}
+          options={{
+            tabBarLabel: 'Dashboard',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'grid' : 'grid-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Shop"
+          component={ShopStackNavigation}
+          options={{
+            tabBarLabel: 'Shop',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'bag-handle' : 'bag-handle-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Tailoring"
+          component={CartStackNavigation}
+          options={{
+            tabBarLabel: 'Tailoring',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'cut' : 'cut-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Profile"
+          component={ProfileStackNavigation}
+          options={{
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'person' : 'person-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+      </TabBar.Navigator>
+    );
+  }
+
+  // Default to customer tabs if role is not set
   return (
-    <TabBar.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: Colors.inputBackground,
-          borderTopColor: Colors.inputBorderColor,
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        tabBarActiveTintColor: Colors.warmBrownColor,
-        tabBarInactiveTintColor: Colors.grey,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-        },
-      }}
-    >
-      <TabBar.Screen 
-        name="Home" 
+    <TabBar.Navigator screenOptions={commonScreenOptions}>
+      <TabBar.Screen
+        name="Home"
         component={HomeStackNavigation}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size, color }}>🏠</Text>
+          tabBarIcon: ({ focused, size }) => (
+            <FastImage
+              source={focused ? tabIcons.homeActive : tabIcons.home}
+              style={{ width: size, height: size }}
+              resizeMode={FastImage.resizeMode.contain}
+            />
           ),
         }}
       />
-      <TabBar.Screen 
-        name="Profile" 
+      <TabBar.Screen
+        name="Cart"
+        component={CartStackNavigation}
+        options={{
+          tabBarIcon: ({ focused, size }) => (
+            <FastImage
+              source={focused ? tabIcons.cartActive : tabIcons.cart}
+              style={{ width: size, height: size }}
+              resizeMode={FastImage.resizeMode.contain}
+            />
+          ),
+        }}
+      />
+      <TabBar.Screen
+        name="Profile"
         component={ProfileStackNavigation}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size, color }}>👤</Text>
+          tabBarIcon: ({ focused, size }) => (
+            <FastImage
+              source={focused ? tabIcons.profileActive : tabIcons.profile}
+              style={{ width: size, height: size }}
+              resizeMode={FastImage.resizeMode.contain}
+            />
           ),
         }}
       />
     </TabBar.Navigator>
   );
 }
-   
-  
-
 
 const styles = StyleSheet.create({
   container: {

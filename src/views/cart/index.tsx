@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 
-export default function Profile(): React.JSX.Element {
+export default function Cart(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   
   // Calculate tab bar height to add bottom padding
@@ -12,8 +12,8 @@ export default function Profile(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={[styles.content, { paddingBottom: tabBarHeight + 16 }]}>
-        <Text style={styles.title}>Profile</Text>
-        <Text style={styles.subtitle}>Your account details</Text>
+        <Text style={styles.title}>Cart</Text>
+        <Text style={styles.subtitle}>Your shopping cart</Text>
       </View>
     </SafeAreaView>
   );
@@ -41,3 +41,4 @@ const styles = StyleSheet.create({
     color: Colors.grey,
   },
 });
+

@@ -1,20 +1,35 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
+export type UserRole = 'customer' | 'tailor' | 'tailor_shop';
+
 export type AuthContextValue = {
   isAuthenticated: boolean;
-  signIn: () => void;
+  userRole: UserRole | null;
+  signIn: (role: UserRole) => void;
   signOut: () => void;
+  setUserRole: (role: UserRole) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
-  const signIn = useCallback(() => setIsAuthenticated(true), []);
-  const signOut = useCallback(() => setIsAuthenticated(false), []);
+  const signIn = useCallback((role: UserRole) => {
+    setIsAuthenticated(true);
+    setUserRole(role);
+  }, []);
 
-  const value = useMemo(() => ({ isAuthenticated, signIn, signOut }), [isAuthenticated, signIn, signOut]);
+  const signOut = useCallback(() => {
+    setIsAuthenticated(false);
+    setUserRole(null);
+  }, []);
+
+  const value = useMemo(
+    () => ({ isAuthenticated, userRole, signIn, signOut, setUserRole }), 
+    [isAuthenticated, userRole, signIn, signOut]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,29 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
+import CustomerHomeScreen from './CustomerHomeScreen';
+import TailorDashboard from './TailorDashboard';
+import ShopTailorDashboard from './ShopTailorDashboard';
 
-export default function Home(): React.JSX.Element {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Home</Text>
-      <Text style={styles.subtitle}>Your account details</Text>
-    </View>
-  );
+interface HomeProps {
+  navigation: any;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
-  },
-});
+export default function Home({ navigation }: HomeProps): React.JSX.Element {
+  const { userRole } = useAuth();
+
+  // Route to appropriate home screen based on user role
+  switch (userRole) {
+    case 'customer':
+      return <CustomerHomeScreen />;
+    case 'tailor':
+      return <TailorDashboard />;
+    case 'tailor_shop':
+      return <ShopTailorDashboard navigation={navigation} />;
+    default:
+      // Default to customer home if role is not set
+      return <CustomerHomeScreen />;
+  }
+}

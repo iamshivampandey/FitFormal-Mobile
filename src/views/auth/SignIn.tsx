@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import React, { useState } from 'react';
+import FastImage from 'react-native-fast-image';
 import { palceholders, strings } from '../../utils/string/strings';
 import { Colors } from '../../utils/colors';
 import en from '../../utils/string/en';
@@ -28,6 +29,8 @@ import {
 } from 'react-native-safe-area-context';
 import CustomButton from '../../components/CustomButton';
 import CustomInput from '../../components/CustomInput';
+import { google_icon } from '../../utils/images';
+import { useAuth, UserRole } from '../../context/AuthContext';
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -36,6 +39,8 @@ const LoginScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('customer');
+  const { signIn } = useAuth();
 
   const isValid = () => {
     if (email === '' || password === '') {
@@ -46,6 +51,9 @@ const LoginScreen = ({ navigation }: any) => {
 
   const onPressSignIn = async () => {
     console.log('onPressSignIn');
+    // Sign in with selected role
+    signIn(selectedRole);
+    navigation.navigate('TabBarNavigation');
   };
 
   return (
@@ -58,7 +66,7 @@ const LoginScreen = ({ navigation }: any) => {
         <View style={styles.Header}>
           <Text style={styles.HeaderBigText}>
             {strings.WELCOME}
-            <Text style={styles.OmocColor}> {strings.APP_NAME}</Text>
+            <Text style={styles.appName}> {strings.APP_NAME}</Text>
           </Text>
         </View>
         <View style={styles.HeaderSmallText}>
@@ -70,6 +78,38 @@ const LoginScreen = ({ navigation }: any) => {
             {strings.ABOUT_APP_NAME}
           </Text>
         </View>
+
+        {/* Role Selector for Testing */}
+        <View style={styles.roleSelector}>
+          <Text style={styles.roleSelectorLabel}>Select Role (Testing):</Text>
+          <View style={styles.roleButtons}>
+            <TouchableOpacity
+              style={[styles.roleButton, selectedRole === 'customer' && styles.roleButtonActive]}
+              onPress={() => setSelectedRole('customer')}
+            >
+              <Text style={[styles.roleButtonText, selectedRole === 'customer' && styles.roleButtonTextActive]}>
+                Customer
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.roleButton, selectedRole === 'tailor' && styles.roleButtonActive]}
+              onPress={() => setSelectedRole('tailor')}
+            >
+              <Text style={[styles.roleButtonText, selectedRole === 'tailor' && styles.roleButtonTextActive]}>
+                Tailor
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.roleButton, selectedRole === 'tailor_shop' && styles.roleButtonActive]}
+              onPress={() => setSelectedRole('tailor_shop')}
+            >
+              <Text style={[styles.roleButtonText, selectedRole === 'tailor_shop' && styles.roleButtonTextActive]}>
+                Shop + Tailor
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.EmailInput}></View>
 
         <CustomInput
@@ -112,9 +152,7 @@ const LoginScreen = ({ navigation }: any) => {
         </TouchableOpacity>
         <CustomButton
           title={strings.LOGIN}
-          onPress={() => {
-            navigation.navigate('TabBarNavigation');
-          }}
+          onPress={onPressSignIn}
           style={styles.button}
         />
 
@@ -141,7 +179,11 @@ const LoginScreen = ({ navigation }: any) => {
         <View style={styles.LoginWithGoogleInput}>
           <TouchableOpacity style={styles.LoginWithGoogle} onPress={() => {}}>
             <View style={styles.LoginWithAppleInput}>
-              {/* <VectorImage source={google_icon} style={styles.GoogleImage} /> */}
+              <FastImage 
+                source={google_icon} 
+                style={styles.GoogleImage}
+                resizeMode={FastImage.resizeMode.contain}
+              />
               <Text style={styles.LoginWithGoogleText}>
                 {strings.LOGIN_WITH_GOOGLE}
               </Text>
@@ -197,10 +239,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
     textAlign: 'center',
-    fontFamily: GILROY_BOLD,
+    // fontFamily: GILROY_BOLD,
     lineHeight: 44,
   },
-  OmocColor: {
+  appName: {
     color: Colors.warmBrownColor,
   },
   HeaderSmallText: {
@@ -213,7 +255,7 @@ const styles = StyleSheet.create({
     color: Colors.grey,
     fontSize: 14,
     fontWeight: '600',
-    fontFamily: GILROY_SEMIBOLD,
+    // fontFamily: GILROY_SEMIBOLD,
     lineHeight: 24,
   },
   HeaderTextFAQ: {
@@ -221,7 +263,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
     marginHorizontal: 10,
-    fontFamily: GILROY_REGULAR,
+    // fontFamily: GILROY_REGULAR,
   },
   EmailInput: {
     alignItems: 'center',
@@ -239,7 +281,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: Colors.inputBackground,
     paddingStart: 20,
-    fontFamily: GILROY_REGULAR,
+    // fontFamily: GILROY_REGULAR,
     color: Colors.whiteColor,
   },
   PasswordInput: {
@@ -257,14 +299,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.inputBorderColor,
     fontSize: 14,
     paddingStart: 20,
-    fontFamily: GILROY_REGULAR,
+    // fontFamily: GILROY_REGULAR,
   },
   PasswordText: {
     fontWeight: '400',
     fontSize: 14,
     padding: 10,
     width: '90%',
-    fontFamily: GILROY_REGULAR,
+    // fontFamily: GILROY_REGULAR,
     color: Colors.whiteColor,
   },
   ViewImg: {
@@ -288,14 +330,14 @@ const styles = StyleSheet.create({
   LoginText: {
     fontSize: 15,
     textAlign: 'center',
-    fontFamily: GILROY_MEDIUM,
+    // fontFamily: GILROY_MEDIUM,
   },
   ForgotText: {
     textAlign: 'right',
     marginRight: 15,
     fontSize: 12,
     fontWeight: '400',
-    fontFamily: GILROY_REGULAR,
+    // fontFamily: GILROY_REGULAR,
     color: Colors.textPrimary,
   },
   Divider: {
@@ -316,7 +358,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 14,
-    fontFamily: GILROY_REGULAR,
+    // fontFamily: GILROY_REGULAR,
   },
   Next: {
     alignItems: 'center',
@@ -324,9 +366,9 @@ const styles = StyleSheet.create({
   },
   LoginWithGoogle: {
     borderRadius: 24,
-    borderWidth: 0.09,
+    borderWidth: 0,
     height: 51,
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: Colors.whiteColor,
     width: '92%',
     alignItems: 'center',
     justifyContent: 'center',
@@ -344,11 +386,11 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   LoginWithGoogleText: {
-    fontWeight: '500',
+    fontWeight: '600',
     textAlign: 'center',
-    fontSize: 14,
-    fontFamily: GILROY_MEDIUM,
-    color: Colors.whiteColor,
+    fontSize: 15,
+    // fontFamily: GILROY_MEDIUM,
+    color: Colors.blackColor,
   },
   BetweenAppleGoogle: {
     alignItems: 'center',
@@ -371,7 +413,45 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: Colors.textSecondary,
     fontSize: 12,
-    fontFamily: GILROY_REGULAR,
+    // fontFamily: GILROY_REGULAR,
+  },
+  roleSelector: {
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  roleSelectorLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  roleButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  roleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    backgroundColor: Colors.inputBackground,
+    alignItems: 'center',
+  },
+  roleButtonActive: {
+    backgroundColor: Colors.warmBrownColor,
+    borderColor: Colors.warmBrownColor,
+  },
+  roleButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  roleButtonTextActive: {
+    color: Colors.whiteColor,
   },
   TermsText: {
     fontWeight: '400',
@@ -393,12 +473,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     fontWeight: '400',
-    fontFamily: GILROY_REGULAR,
+    // fontFamily: GILROY_REGULAR,
   },
   SignUp: {
     color: Colors.warmBrownColor,
     fontSize: 12,
-    fontFamily: GILROY_MEDIUM,
+    // fontFamily: GILROY_MEDIUM,
   },
   button: {
     marginTop: 20,

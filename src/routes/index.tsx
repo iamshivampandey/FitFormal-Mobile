@@ -10,21 +10,24 @@ const Stack = createNativeStackNavigator();
 
 function AppRootNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Splash" >
+    <Stack.Navigator 
+      initialRouteName="Splash"
+      screenOptions={{
+        headerShown: false,
+        statusBarTranslucent: true,
+      }}
+    >
       <Stack.Screen
         name="Splash"
         component={Splash}
-        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="TabBarNavigation"
         component={TabBarNavigation}
-        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="AuthStackNavigation"
         component={AuthStackNavigation}
-        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

@@ -13,13 +13,13 @@ import {
 import AppRootNavigator from './src/routes';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './src/context/AuthContext';
+// import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 function App() {
-
   return (
-    <SafeAreaProvider>
-      <AppContent />     
-    </SafeAreaProvider>
+      <SafeAreaProvider>
+        <AppContent />
+      </SafeAreaProvider>
   );
 }
 
