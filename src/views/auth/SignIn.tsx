@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import React, { useState } from 'react';
 import FastImage from 'react-native-fast-image';
@@ -31,10 +32,14 @@ import CustomButton from '../../components/CustomButton';
 import CustomInput from '../../components/CustomInput';
 import { google_icon } from '../../utils/images';
 import { useAuth, UserRole } from '../../context/AuthContext';
+import { signInWithEmailAndPassword } from '../../utils/authApi';
+import StorageService from '../../services/storage.service';
+import { getBackendRoleName } from '../../utils/constants/roles';
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 const LoginScreen = ({ navigation }: any) => {
-  const [email, setEmail] = useState('');
-  const [password, setpassword] = useState('');
+  const [email, setEmail] = useState('Itsshivampandey551@gmail.com');
+  const [password, setpassword] = useState('Topbox@012');
   const [passwordHide, setpasswordHide] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
@@ -50,10 +55,153 @@ const LoginScreen = ({ navigation }: any) => {
   };
 
   const onPressSignIn = async () => {
-    console.log('onPressSignIn');
-    // Sign in with selected role
-    signIn(selectedRole);
-    navigation.navigate('TabBarNavigation');
+    // Validate inputs
+    let valid = true;
+    
+    if (email.trim() === '') {
+      setEmailError('Email is required');
+      valid = false;
+    } else {
+      setEmailError('');
+    }
+    
+    if (password.trim() === '') {
+      setPasswordError('Password is required');
+      valid = false;
+    } else {
+      setPasswordError('');
+    }
+    
+    if (!valid) {
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const loginData = {
+        email: email.trim(),
+        password: password,
+      };
+
+      console.log('Attempting login with email:', loginData.email);
+      
+      const response = await signInWithEmailAndPassword(loginData);
+      
+      console.log('✅ Login API Response:', JSON.stringify(response.data));
+      
+      if (response.data && response.data.data) {
+        const { token, user, roles, expiresIn } = response.data.data;
+        
+        console.log('📦 Full Response Data:', {
+          user,
+          roles,
+          token: token ? 'Token received' : 'No token',
+          expiresIn
+        });
+        
+        // Validate user data
+        if (!user || !user.email || !user.firstName) {
+          setLoading(false);
+          Alert.alert('Error', 'Invalid user data received from server');
+          console.error('❌ Invalid user data:', user);
+          return;
+        }
+        
+        // Save token
+        if (token) {
+          await StorageService.saveToken(token);
+          console.log('✓ Token saved');
+        }
+        
+        // Save complete user data (save the inner data object with user, roles, token)
+        await StorageService.saveUser(JSON.stringify(response.data.data));
+        console.log('✓ User data saved:', {
+          id: user.id,
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          phone: user.phoneNumber
+        });
+        
+        // Determine user role from roles array
+        let userRole: UserRole = 'customer'; // Default
+        let primaryRole = null;
+        
+        // roles is an ARRAY - get the first role
+        if (roles && Array.isArray(roles) && roles.length > 0) {
+          primaryRole = roles[0]; // Get first role
+          console.log('📋 Primary Role from API:', primaryRole);
+          console.log('📋 Role Name:', primaryRole.name);
+          console.log('📋 Role ID:', primaryRole.id);
+          
+          // Map capitalized role names to frontend role types
+          const roleName = primaryRole.name;
+          
+          if (roleName === 'Seller') {
+            userRole = 'shop';
+          } else if (roleName === 'Customer') {
+            userRole = 'customer';
+          } else if (roleName === 'Tailor') {
+            userRole = 'tailor';
+          } else if (roleName === 'Taylorseller' || roleName === 'TailorSeller') {
+            userRole = 'tailor_shop';
+          } else {
+            // Try lowercase conversion as fallback
+            userRole = roleName.toLowerCase() as UserRole;
+          }
+          
+          console.log('✓ Mapped to frontend role:', userRole);
+        } else {
+          console.warn('⚠️ No roles found in response, using default: customer');
+        }
+        
+        // Save role to storage
+        await StorageService.saveRole(userRole);
+        console.log('✓ Role saved to storage:', userRole);
+        
+        // Sign in with the user's role - THIS IS REQUIRED FOR NAVIGATION!
+        signIn(userRole);
+        console.log('✓ AuthContext updated with role:', userRole);
+        
+        setLoading(false);
+        
+        // Navigate based on role
+        const displayName = `${user?.firstName} ${user?.lastName}`;
+        const roleDisplay = primaryRole?.name || userRole;
+        
+        Alert.alert(
+          `Welcome ${displayName}!`,
+          `Logged in as ${roleDisplay}`,
+          [
+            {
+              text: 'Continue',
+              onPress: () => {
+                console.log('🚀 Navigating to TabBarNavigation...');
+                // Navigate to parent navigator (AppRootNavigator) and reset to TabBarNavigation
+                const parentNavigator = navigation.getParent();
+                if (parentNavigator) {
+                  parentNavigator.reset({
+                    index: 0,
+                    routes: [{ name: 'TabBarNavigation' }],
+                  });
+                } else {
+                  // Fallback: Just navigate without reset
+                  navigation.navigate('TabBarNavigation' as never);
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        setLoading(false);
+        Alert.alert('Error', 'Invalid response from server');
+      }
+    } catch (e: any) {
+      setLoading(false);
+      console.error('❌ Login Error:', e);
+      const errorMessage = e.response?.data?.message || e.message || 'Login failed. Please check your credentials.';
+      Alert.alert('Login Failed', errorMessage);
+    }
   };
 
   return (
@@ -82,13 +230,25 @@ const LoginScreen = ({ navigation }: any) => {
         {/* Role Selector for Testing */}
         <View style={styles.roleSelector}>
           <Text style={styles.roleSelectorLabel}>Select Role (Testing):</Text>
-          <View style={styles.roleButtons}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.roleButtons}
+          >
             <TouchableOpacity
               style={[styles.roleButton, selectedRole === 'customer' && styles.roleButtonActive]}
               onPress={() => setSelectedRole('customer')}
             >
               <Text style={[styles.roleButtonText, selectedRole === 'customer' && styles.roleButtonTextActive]}>
-                Customer
+                👔 Customer
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.roleButton, selectedRole === 'shop' && styles.roleButtonActive]}
+              onPress={() => setSelectedRole('shop')}
+            >
+              <Text style={[styles.roleButtonText, selectedRole === 'shop' && styles.roleButtonTextActive]}>
+                🏬 Shop Owner
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -96,7 +256,7 @@ const LoginScreen = ({ navigation }: any) => {
               onPress={() => setSelectedRole('tailor')}
             >
               <Text style={[styles.roleButtonText, selectedRole === 'tailor' && styles.roleButtonTextActive]}>
-                Tailor
+                ✂️ Tailor
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -104,10 +264,10 @@ const LoginScreen = ({ navigation }: any) => {
               onPress={() => setSelectedRole('tailor_shop')}
             >
               <Text style={[styles.roleButtonText, selectedRole === 'tailor_shop' && styles.roleButtonTextActive]}>
-                Shop + Tailor
+                🏪 Shop + Tailor
               </Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
 
         <View style={styles.EmailInput}></View>
@@ -123,6 +283,7 @@ const LoginScreen = ({ navigation }: any) => {
         />
         <TouchableOpacity style={styles.PasswordInput}>
           <TextInput
+          value={password}
             style={styles.PasswordText}
             secureTextEntry={!passwordHide}
             placeholder={palceholders.PASSWORD}
@@ -154,6 +315,7 @@ const LoginScreen = ({ navigation }: any) => {
           title={strings.LOGIN}
           onPress={onPressSignIn}
           style={styles.button}
+          loading={loading}
         />
 
         <TouchableOpacity
@@ -216,6 +378,8 @@ const LoginScreen = ({ navigation }: any) => {
           </Text>
         </View>
       </ScrollView>
+
+      <LoadingOverlay visible={loading} message="Signing in..." />
     </View>
   );
 };
@@ -239,7 +403,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
     textAlign: 'center',
-    // fontFamily: GILROY_BOLD,
+    fontFamily: GILROY_BOLD,
     lineHeight: 44,
   },
   appName: {
@@ -255,7 +419,7 @@ const styles = StyleSheet.create({
     color: Colors.grey,
     fontSize: 14,
     fontWeight: '600',
-    // fontFamily: GILROY_SEMIBOLD,
+    fontFamily: GILROY_SEMIBOLD,
     lineHeight: 24,
   },
   HeaderTextFAQ: {
@@ -263,7 +427,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
     marginHorizontal: 10,
-    // fontFamily: GILROY_REGULAR,
+    fontFamily: GILROY_REGULAR,
   },
   EmailInput: {
     alignItems: 'center',
@@ -281,7 +445,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: Colors.inputBackground,
     paddingStart: 20,
-    // fontFamily: GILROY_REGULAR,
+    fontFamily: GILROY_REGULAR,
     color: Colors.whiteColor,
   },
   PasswordInput: {
@@ -299,15 +463,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.inputBorderColor,
     fontSize: 14,
     paddingStart: 20,
-    // fontFamily: GILROY_REGULAR,
+    fontFamily: GILROY_REGULAR,
   },
   PasswordText: {
     fontWeight: '400',
     fontSize: 14,
     padding: 10,
     width: '90%',
-    // fontFamily: GILROY_REGULAR,
-    color: Colors.whiteColor,
+    fontFamily: GILROY_REGULAR,
+    color: Colors.blackColor,
   },
   ViewImg: {
     width: 25,
@@ -330,14 +494,14 @@ const styles = StyleSheet.create({
   LoginText: {
     fontSize: 15,
     textAlign: 'center',
-    // fontFamily: GILROY_MEDIUM,
+    fontFamily: GILROY_MEDIUM,
   },
   ForgotText: {
     textAlign: 'right',
     marginRight: 15,
     fontSize: 12,
     fontWeight: '400',
-    // fontFamily: GILROY_REGULAR,
+    fontFamily: GILROY_REGULAR,
     color: Colors.textPrimary,
   },
   Divider: {
@@ -358,7 +522,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 14,
-    // fontFamily: GILROY_REGULAR,
+    fontFamily: GILROY_REGULAR,
   },
   Next: {
     alignItems: 'center',
@@ -389,7 +553,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     fontSize: 15,
-    // fontFamily: GILROY_MEDIUM,
+    fontFamily: GILROY_MEDIUM,
     color: Colors.blackColor,
   },
   BetweenAppleGoogle: {
@@ -413,7 +577,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: Colors.textSecondary,
     fontSize: 12,
-    // fontFamily: GILROY_REGULAR,
+    fontFamily: GILROY_REGULAR,
   },
   roleSelector: {
     marginTop: 20,
@@ -428,25 +592,25 @@ const styles = StyleSheet.create({
   },
   roleButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 10,
+    paddingHorizontal: 20,
   },
   roleButton: {
-    flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: Colors.inputBorderColor,
     backgroundColor: Colors.inputBackground,
     alignItems: 'center',
+    minWidth: 120,
   },
   roleButtonActive: {
     backgroundColor: Colors.warmBrownColor,
     borderColor: Colors.warmBrownColor,
   },
   roleButtonText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.textPrimary,
   },
@@ -473,12 +637,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     fontWeight: '400',
-    // fontFamily: GILROY_REGULAR,
+    fontFamily: GILROY_REGULAR,
   },
   SignUp: {
     color: Colors.warmBrownColor,
     fontSize: 12,
-    // fontFamily: GILROY_MEDIUM,
+    fontFamily: GILROY_MEDIUM,
   },
   button: {
     marginTop: 20,

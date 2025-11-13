@@ -5,170 +5,429 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
-  Platform,
+  TextInput,
   Image,
   Alert,
   Switch,
-  TextInput,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { Dropdown } from 'react-native-element-dropdown';
 import { Colors } from '../../utils/colors';
+import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
 import CustomButton from '../../components/CustomButton';
-import CustomInput from '../../components/CustomInput';
 
-const AddEditProduct: React.FC<any> = ({ navigation, route }) => {
+interface ProductImage {
+  id: string;
+  uri: string;
+  fileName: string;
+  isPrimary: boolean;
+}
+
+interface AddEditProductProps {
+  navigation: any;
+  route?: any;
+}
+
+const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) => {
   const { product, mode } = route?.params || { mode: 'add' };
-  const insets = useSafeAreaInsets();
-
-  // Form state
-  const [productName, setProductName] = useState(product?.name || '');
-  const [price, setPrice] = useState(product?.price || '');
-  const [category, setCategory] = useState(product?.category || 'Shirt Fabric');
-  const [stock, setStock] = useState(product?.stock?.toString() || '0');
-  const [isAvailable, setIsAvailable] = useState(product?.isAvailable ?? true);
-  const [selectedImage, setSelectedImage] = useState(product?.image || null);
-  const [description, setDescription] = useState('');
-
-  // Validation errors
-  const [nameError, setNameError] = useState('');
-  const [priceError, setPriceError] = useState('');
-  const [stockError, setStockError] = useState('');
-
-  const categories = [
-    'Shirt Fabric',
-    'Trouser Fabric',
-    'Blazer Fabric',
-    'Suit Set',
-    'Accessories',
+  
+  // Data Options (should come from API in production)
+  const brands = [
+    { id: 1, name: 'Raymond' },
+    { id: 2, name: 'Arrow' },
+    { id: 3, name: 'Park Avenue' },
+    { id: 4, name: 'Allen Solly' },
+    { id: 5, name: 'Van Heusen' },
   ];
 
-  const handleImageUpload = () => {
-    // In a real app, this would open image picker
-    Alert.alert(
-      'Upload Photo',
-      'Choose an option',
-      [
-        {
-          text: 'Take Photo',
-          onPress: () => {
-            Alert.alert('Info', 'Camera functionality will be implemented with react-native-image-picker');
-          },
-        },
-        {
-          text: 'Choose from Library',
-          onPress: () => {
-            Alert.alert('Info', 'Gallery functionality will be implemented with react-native-image-picker');
-          },
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ]
-    );
-  };
+  const categories = [
+    { id: 1, name: 'Shirt Fabric' },
+    { id: 2, name: 'Suiting' },
+    { id: 3, name: 'Trouser Fabric' },
+    { id: 4, name: 'Formal Wear' },
+    { id: 5, name: 'Casual Wear' },
+  ];
+  
+  // Form State - ALL FIELDS from web
+  const [title, setTitle] = useState(product?.title || '');
+  const [brandId, setBrandId] = useState(product?.brand_id || '');
+  const [categoryId, setCategoryId] = useState(product?.category_id || '');
+  const [sku, setSku] = useState(product?.sku || '');
+  const [styleCode, setStyleCode] = useState(product?.style_code || '');
+  const [modelName, setModelName] = useState(product?.model_name || '');
+  const [shortDescription, setShortDescription] = useState(product?.short_description || '');
+  const [longDescription, setLongDescription] = useState(product?.long_description || '');
+  const [salesPackage, setSalesPackage] = useState(product?.sales_package || '');
+  const [isActive, setIsActive] = useState(product?.is_active ?? true);
+  
+  // Product Details
+  const [productType, setProductType] = useState(product?.product_type || '');
+  const [color, setColor] = useState(product?.color || '');
+  const [brandColor, setBrandColor] = useState(product?.brand_color || '');
+  const [fabric, setFabric] = useState(product?.fabric || '');
+  const [fabricPurity, setFabricPurity] = useState(product?.fabric_purity || '');
+  const [composition, setComposition] = useState(product?.composition || '');
+  const [pattern, setPattern] = useState(product?.pattern || '');
+  const [stitchingType, setStitchingType] = useState(product?.stitching_type || '');
+  const [idealFor, setIdealFor] = useState(product?.ideal_for || '');
+  const [topLengthValue, setTopLengthValue] = useState(product?.top_length_value || '');
+  const [topLengthUnit, setTopLengthUnit] = useState(product?.top_length_unit || 'm');
+  const [unit, setUnit] = useState(product?.unit || 'meter');
+  
+  // Pricing
+  const [currencyCode, setCurrencyCode] = useState(product?.currency_code || 'INR');
+  const [priceMRP, setPriceMRP] = useState(product?.price_mrp || '');
+  const [priceSale, setPriceSale] = useState(product?.price_sale || '');
+  
+  // Inventory
+  const [stockQty, setStockQty] = useState(product?.stock_qty || '');
+  
+  // Compliance
+  const [countryOfOrigin, setCountryOfOrigin] = useState(product?.country_of_origin || '');
+  const [manufacturerDetails, setManufacturerDetails] = useState(product?.manufacturer_details || '');
+  const [packerDetails, setPackerDetails] = useState(product?.packer_details || '');
+  const [importerDetails, setImporterDetails] = useState(product?.importer_details || '');
+  const [mfgMonthYear, setMfgMonthYear] = useState(product?.mfg_month_year || '');
+  const [customerCare, setCustomerCare] = useState(product?.customer_care || '');
+  
+  const [images, setImages] = useState<ProductImage[]>(product?.images || []);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  const validateForm = () => {
-    let isValid = true;
-
-    if (productName.trim() === '') {
-      setNameError('Product name is required');
-      isValid = false;
-    } else {
-      setNameError('');
-    }
-
-    if (price.trim() === '' || isNaN(Number(price)) || Number(price) <= 0) {
-      setPriceError('Please enter a valid price');
-      isValid = false;
-    } else {
-      setPriceError('');
-    }
-
-    if (stock.trim() === '' || isNaN(Number(stock)) || Number(stock) < 0) {
-      setStockError('Please enter a valid stock quantity');
-      isValid = false;
-    } else {
-      setStockError('');
-    }
-
-    return isValid;
-  };
-
-  const handleSave = () => {
-    if (!validateForm()) {
+  // Pick Images
+  const handlePickImages = () => {
+    const remaining = 5 - images.length;
+    if (remaining <= 0) {
+      Alert.alert('Limit Reached', 'You can only add up to 5 images');
       return;
     }
 
-    const productData = {
-      id: product?.id || Date.now().toString(),
-      name: productName,
-      price: price,
-      category: category,
-      stock: parseInt(stock),
-      isAvailable: isAvailable,
-      image: selectedImage,
-    };
-
-    // In a real app, this would make an API call
-    Alert.alert(
-      'Success',
-      `Product ${mode === 'add' ? 'added' : 'updated'} successfully!`,
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        selectionLimit: remaining,
+        quality: 0.8,
+      },
+      (response) => {
+        console.log('response', response);
+        if (response.didCancel) return;
+        
+        if (response.errorCode) {
+          Alert.alert('Error', 'Failed to pick images');
+          return;
+        }
+        
+        if (response.assets) {
+          const newImages: ProductImage[] = response.assets.map((asset, index) => ({
+            id: Date.now() + index + '',
+            uri: asset.uri || '',
+            fileName: asset.fileName || 'image.jpg',
+            isPrimary: images.length === 0 && index === 0,
+          }));
+          
+          setImages([...images, ...newImages]);
+          if (errors.images) {
+            setErrors({...errors, images: ''});
+          }
+        }
+      }
     );
   };
 
-  const renderCategorySelector = () => (
-    <View style={styles.categorySelector}>
-      <Text style={styles.label}>Category *</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
-      >
-        {categories.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.categoryOption,
-              category === cat && styles.categoryOptionActive,
-            ]}
-            onPress={() => setCategory(cat)}
-          >
-            <Text
-              style={[
-                styles.categoryOptionText,
-                category === cat && styles.categoryOptionTextActive,
-              ]}
-            >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+  const handleRemoveImage = (id: string) => {
+    const newImages = images.filter(img => img.id !== id);
+    if (newImages.length > 0 && !newImages.some(img => img.isPrimary)) {
+      newImages[0].isPrimary = true;
+    }
+    setImages(newImages);
+  };
+
+  const handleSetPrimaryImage = (id: string) => {
+    setImages(images.map(img => ({
+      ...img,
+      isPrimary: img.id === id,
+    })));
+  };
+
+  const validate = (): boolean => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!title.trim()) newErrors.title = 'Title is required';
+    if (!categoryId) newErrors.categoryId = 'Category is required';
+    if (!unit) newErrors.unit = 'Unit is required';
+    if (!priceMRP || parseFloat(priceMRP) <= 0) newErrors.priceMRP = 'Valid MRP is required';
+    if (!stockQty || parseFloat(stockQty) < 0) newErrors.stockQty = 'Valid stock quantity is required';
+    if (images.length === 0) newErrors.images = 'At least one image is required';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) {
+      Alert.alert('Validation Error', 'Please fill all required fields marked with *');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+    const productData = {
+        title,
+        brand_id: brandId,
+        category_id: categoryId,
+        sku,
+        style_code: styleCode,
+        model_name: modelName,
+        short_description: shortDescription,
+        long_description: longDescription,
+        sales_package: salesPackage,
+        is_active: isActive,
+        product_type: productType,
+        color,
+        brand_color: brandColor,
+        fabric,
+        fabric_purity: fabricPurity,
+        composition,
+        pattern,
+        stitching_type: stitchingType,
+        ideal_for: idealFor,
+        top_length_value: topLengthValue ? parseFloat(topLengthValue) : null,
+        top_length_unit: topLengthUnit,
+        unit,
+        currency_code: currencyCode,
+        price_mrp: parseFloat(priceMRP),
+        price_sale: priceSale ? parseFloat(priceSale) : null,
+        stock_qty: parseFloat(stockQty),
+        country_of_origin: countryOfOrigin,
+        manufacturer_details: manufacturerDetails,
+        packer_details: packerDetails,
+        importer_details: importerDetails,
+        mfg_month_year: mfgMonthYear,
+        customer_care: customerCare,
+        images: images,
+      };
+      
+      console.log('Product Data:', productData);
+      
+      // TODO: API Integration
+      
+      setLoading(false);
+    Alert.alert(
+      'Success',
+      `Product ${mode === 'add' ? 'added' : 'updated'} successfully!`,
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', 'Failed to save product');
+      console.error(error);
+    }
+  };
+
+  const renderSectionHeader = (title: string, icon: string) => (
+    <View style={styles.sectionHeader}>
+      <Icon name={icon} size={20} color={Colors.warmBrownColor} />
+      <Text style={styles.sectionTitle}>{title}</Text>
     </View>
   );
 
+  const renderInput = (
+    label: string,
+    value: string,
+    onChangeText: (text: string) => void,
+    placeholder: string,
+    errorKey: string,
+    options?: {
+      multiline?: boolean;
+      keyboardType?: 'default' | 'numeric' | 'email-address' | 'decimal-pad' | 'number-pad';
+      required?: boolean;
+      maxLength?: number;
+    }
+  ) => (
+    <View style={styles.inputContainer}>
+      <Text style={styles.inputLabel}>
+        {label}
+        {options?.required && <Text style={styles.required}> *</Text>}
+      </Text>
+      <TextInput
+        style={[
+          options?.multiline ? styles.textArea : styles.input,
+          errors[errorKey] && styles.inputError,
+        ]}
+        value={value}
+        onChangeText={(text) => {
+          onChangeText(text);
+          if (errors[errorKey]) {
+            setErrors({...errors, [errorKey]: ''});
+          }
+        }}
+        placeholder={placeholder}
+        placeholderTextColor={Colors.textSecondary}
+        multiline={options?.multiline}
+        numberOfLines={options?.multiline ? 4 : 1}
+        keyboardType={options?.keyboardType || 'default'}
+        maxLength={options?.maxLength}
+      />
+      {options?.maxLength && options?.multiline && (
+        <Text style={styles.charCount}>{value.length}/{options.maxLength}</Text>
+      )}
+      {errors[errorKey] && (
+        <Text style={styles.errorText}>{errors[errorKey]}</Text>
+      )}
+    </View>
+  );
+
+  const renderPicker = (
+    label: string,
+    selectedValue: string,
+    onValueChange: (value: string) => void,
+    items: Array<{label: string; value: string}>,
+    errorKey?: string,
+    required?: boolean,
+    allowOther?: boolean
+  ) => {
+    const [showOtherInput, setShowOtherInput] = React.useState(false);
+    const [otherValue, setOtherValue] = React.useState('');
+    const [isFocus, setIsFocus] = React.useState(false);
+
+    // Add "Other" option if allowOther is true
+    const dropdownItems = allowOther 
+      ? [...items, { label: '✏️ Other (Custom)', value: '__OTHER__' }]
+      : items;
+
+    React.useEffect(() => {
+      // Check if current value is not in predefined list
+      if (selectedValue && selectedValue !== '' && selectedValue !== '__OTHER__') {
+        const foundItem = items.find(item => item.value === selectedValue);
+        if (!foundItem) {
+          setShowOtherInput(true);
+          setOtherValue(selectedValue);
+        }
+      }
+    }, []);
+
+    const handleValueChange = (value: string) => {
+      if (value === '__OTHER__') {
+        setShowOtherInput(true);
+        setOtherValue('');
+        onValueChange('');
+      } else {
+        setShowOtherInput(false);
+        onValueChange(value);
+        if (errorKey && errors[errorKey]) {
+          setErrors({...errors, [errorKey]: ''});
+        }
+      }
+    };
+
+    return (
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>
+          {label}
+          {required && <Text style={styles.required}> *</Text>}
+        </Text>
+        
+        {!showOtherInput && (
+          <Dropdown
+            style={[
+              styles.dropdown,
+              isFocus && styles.dropdownFocused,
+              errorKey && errors[errorKey] && styles.inputError,
+            ]}
+            placeholderStyle={styles.dropdownPlaceholder}
+            selectedTextStyle={styles.dropdownSelectedText}
+            inputSearchStyle={styles.dropdownSearchInput}
+            iconStyle={styles.dropdownIcon}
+            containerStyle={styles.dropdownContainer}
+            itemTextStyle={styles.dropdownItemText}
+            activeColor={Colors.warmBrownColor + '20'}
+            data={dropdownItems}
+            search={items.length > 5}
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder={!isFocus ? `Select ${label}` : '...'}
+            searchPlaceholder="Search..."
+            value={selectedValue}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            onChange={item => {
+              handleValueChange(item.value);
+              setIsFocus(false);
+            }}
+            renderLeftIcon={() => (
+              isFocus ? (
+                <Icon
+                  name="chevron-up"
+                  size={20}
+                  color={Colors.warmBrownColor}
+                  style={styles.dropdownLeftIcon}
+                />
+              ) : null
+            )}
+            renderRightIcon={() => (
+              <Icon
+                name={isFocus ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={isFocus ? Colors.warmBrownColor : Colors.textSecondary}
+                style={styles.dropdownRightIcon}
+              />
+            )}
+          />
+        )}
+        
+        {showOtherInput && (
+          <View>
+            <TextInput
+              style={[styles.input, styles.otherInput]}
+              value={otherValue}
+              onChangeText={(text) => {
+                setOtherValue(text);
+                onValueChange(text);
+                if (errorKey && errors[errorKey]) {
+                  setErrors({...errors, [errorKey]: ''});
+                }
+              }}
+              placeholder={`Enter custom ${label.toLowerCase()}`}
+              placeholderTextColor={Colors.textSecondary}
+              autoFocus
+            />
+            <TouchableOpacity
+              style={styles.backToDropdownButton}
+              onPress={() => {
+                setShowOtherInput(false);
+                setOtherValue('');
+                onValueChange('');
+              }}
+            >
+              <Icon name="arrow-back" size={16} color={Colors.warmBrownColor} />
+              <Text style={styles.backToDropdownText}>Back to options</Text>
+          </TouchableOpacity>
+          </View>
+        )}
+        
+        {errorKey && errors[errorKey] && (
+          <Text style={styles.errorText}>{errors[errorKey]}</Text>
+        )}
+    </View>
+  );
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoid}
+        style={styles.flex}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backIcon}>←</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
             {mode === 'add' ? 'Add New Product' : 'Edit Product'}
@@ -177,144 +436,282 @@ const AddEditProduct: React.FC<any> = ({ navigation, route }) => {
         </View>
 
         <ScrollView
-          style={styles.content}
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
         >
-          {/* Image Upload Section */}
+          {/* BASIC INFORMATION */}
+          {renderSectionHeader('Basic Information', 'information-circle-outline')}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Product Photo</Text>
-            <TouchableOpacity
-              style={styles.imageUploadContainer}
-              onPress={handleImageUpload}
-            >
-              {selectedImage ? (
-                <Image
-                  source={selectedImage}
-                  style={styles.uploadedImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={styles.uploadPlaceholder}>
-                  <Text style={styles.uploadIcon}>📷</Text>
-                  <Text style={styles.uploadText}>Tap to upload photo</Text>
-                  <Text style={styles.uploadSubtext}>
-                    JPG, PNG (Max 5MB)
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            {selectedImage && (
-              <TouchableOpacity
-                style={styles.changeImageButton}
-                onPress={handleImageUpload}
-              >
-                <Text style={styles.changeImageText}>Change Photo</Text>
-              </TouchableOpacity>
+            {renderInput('Product Title', title, setTitle, 'e.g., Premium Cotton Shirt Fabric', 'title', { required: true })}
+            
+            {renderPicker(
+              'Brand',
+              brandId,
+              setBrandId,
+              [
+                { label: 'Select Brand', value: '' },
+                ...brands.map(b => ({ label: b.name, value: b.id.toString() }))
+              ]
             )}
-          </View>
-
-          {/* Product Details Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Product Details</Text>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Product Name *</Text>
-              <CustomInput
-                placeholder="e.g., Premium Cotton Shirt Fabric"
-                value={productName}
-                onChangeText={(text) => {
-                  setProductName(text);
-                  setNameError('');
-                }}
-                error={nameError}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Price ($) *</Text>
-              <CustomInput
-                placeholder="0.00"
-                value={price}
-                onChangeText={(text) => {
-                  setPrice(text);
-                  setPriceError('');
-                }}
-                keyboardType="decimal-pad"
-                error={priceError}
-              />
-            </View>
-
-            {renderCategorySelector()}
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Stock Quantity *</Text>
-              <CustomInput
-                placeholder="0"
-                value={stock}
-                onChangeText={(text) => {
-                  setStock(text);
-                  setStockError('');
-                }}
-                keyboardType="number-pad"
-                error={stockError}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Description (Optional)</Text>
-              <View style={styles.textAreaContainer}>
-                <TextInput
-                  style={styles.textArea}
-                  placeholder="Enter product description..."
-                  placeholderTextColor={Colors.grey}
-                  value={description}
-                  onChangeText={setDescription}
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Availability Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Availability</Text>
-            <View style={styles.availabilityContainer}>
-              <View style={styles.availabilityInfo}>
-                <Text style={styles.availabilityTitle}>
-                  {isAvailable ? 'Available for Sale' : 'Out of Stock'}
-                </Text>
-                <Text style={styles.availabilitySubtext}>
-                  {isAvailable
-                    ? 'Product is visible to customers'
-                    : 'Product is hidden from customers'}
+            
+            {renderPicker(
+              'Category',
+              categoryId,
+              setCategoryId,
+              [
+                { label: 'Select Category', value: '' },
+                ...categories.map(c => ({ label: c.name, value: c.id.toString() }))
+              ],
+              'categoryId',
+              true
+            )}
+            
+            {renderInput('SKU', sku, setSku, 'Stock Keeping Unit', 'sku')}
+            {renderInput('Style Code', styleCode, setStyleCode, 'Style Code', 'styleCode')}
+            {renderInput('Model Name', modelName, setModelName, 'Model Name', 'modelName')}
+            {renderInput('Short Description', shortDescription, setShortDescription, 'Brief description (max 500 characters)', 'shortDescription', { multiline: true, maxLength: 500 })}
+            {renderInput('Long Description', longDescription, setLongDescription, 'Detailed product description', 'longDescription', { multiline: true })}
+            {renderInput('Sales Package', salesPackage, setSalesPackage, 'e.g., 1 Piece', 'salesPackage')}
+            
+            <View style={styles.switchContainer}>
+              <View style={styles.switchInfo}>
+                <Text style={styles.switchLabel}>Product is Active</Text>
+                <Text style={styles.switchSubtext}>
+                  {isActive ? 'Visible to customers' : 'Hidden from customers'}
                 </Text>
               </View>
               <Switch
-                value={isAvailable}
-                onValueChange={setIsAvailable}
+                value={isActive}
+                onValueChange={setIsActive}
                 trackColor={{ false: Colors.grey, true: Colors.warmBrownColor }}
                 thumbColor={Colors.whiteColor}
               />
             </View>
           </View>
 
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
+          {/* PRODUCT DETAILS */}
+          {renderSectionHeader('Product Details', 'list-outline')}
+          <View style={styles.section}>
+            {renderPicker(
+              'Product Type',
+              productType,
+              setProductType,
+              [
+                { label: 'Select Type', value: '' },
+                { label: 'Shirt Fabric', value: 'Shirt Fabric' },
+                { label: 'Suiting', value: 'Suiting' },
+                { label: 'Trouser Fabric', value: 'Trouser Fabric' },
+                { label: 'Formal Wear', value: 'Formal Wear' },
+                { label: 'Casual Wear', value: 'Casual Wear' },
+              ]
+            )}
+            
+            {renderInput('Color', color, setColor, 'e.g., Navy Blue, Sky Blue, Any color', 'color')}
+            {renderInput('Brand Color', brandColor, setBrandColor, 'Brand specific color name', 'brandColor')}
+            {renderInput('Fabric', fabric, setFabric, 'e.g., Cotton, Linen, Giza Cotton, Any fabric', 'fabric')}
+            
+            {renderPicker(
+              'Fabric Purity',
+              fabricPurity,
+              setFabricPurity,
+              [
+                { label: 'Select', value: '' },
+                { label: 'Pure', value: 'Pure' },
+                { label: 'Blend', value: 'Blend' },
+              ],
+              undefined,
+              false,
+              true
+            )}
+            
+            {renderInput('Composition', composition, setComposition, 'e.g., 90% Cotton / 10% Polyester', 'composition')}
+            
+            {renderPicker(
+              'Pattern',
+              pattern,
+              setPattern,
+              [
+                { label: 'Select', value: '' },
+                { label: 'Solid', value: 'Solid' },
+                { label: 'Checkered', value: 'Checkered' },
+                { label: 'Striped', value: 'Striped' },
+                { label: 'Printed', value: 'Printed' },
+                { label: 'Plain', value: 'Plain' },
+              ],
+              undefined,
+              false,
+              true
+            )}
+            
+            {renderPicker(
+              'Stitching Type',
+              stitchingType,
+              setStitchingType,
+              [
+                { label: 'Select', value: '' },
+                { label: 'Unstitched', value: 'Unstitched' },
+                { label: 'Stitched', value: 'Stitched' },
+              ],
+              undefined,
+              false,
+              true
+            )}
+            
+            {renderPicker(
+              'Ideal For',
+              idealFor,
+              setIdealFor,
+              [
+                { label: 'Select', value: '' },
+                { label: 'Men', value: 'Men' },
+                { label: 'Women', value: 'Women' },
+                { label: 'Unisex', value: 'Unisex' },
+              ],
+              undefined,
+              false,
+              true
+            )}
+            
+            {renderInput('Top Length Value', topLengthValue, setTopLengthValue, '1.6', 'topLengthValue', { keyboardType: 'decimal-pad' })}
+            
+            {renderPicker(
+              'Top Length Unit',
+              topLengthUnit,
+              setTopLengthUnit,
+              [
+                { label: 'Meter (m)', value: 'm' },
+                { label: 'Centimeter (cm)', value: 'cm' },
+                { label: 'Feet (ft)', value: 'ft' },
+                { label: 'Yard (yd)', value: 'yd' },
+              ]
+            )}
+            
+            {renderPicker(
+              'Product Unit',
+              unit,
+              setUnit,
+              [
+                { label: 'Meter', value: 'meter' },
+                { label: 'Piece', value: 'piece' },
+                { label: 'Yard', value: 'yard' },
+              ],
+              'unit',
+              true
+            )}
+          </View>
+
+          {/* PRICING */}
+          {renderSectionHeader('Pricing', 'pricetag-outline')}
+          <View style={styles.section}>
+            {renderPicker(
+              'Currency',
+              currencyCode,
+              setCurrencyCode,
+              [
+                { label: 'INR (₹)', value: 'INR' },
+                { label: 'USD ($)', value: 'USD' },
+                { label: 'EUR (€)', value: 'EUR' },
+              ]
+            )}
+            
+            {renderInput('MRP Price', priceMRP, setPriceMRP, '0.00', 'priceMRP', { required: true, keyboardType: 'decimal-pad' })}
+            {renderInput('Sale Price (Optional)', priceSale, setPriceSale, '0.00', 'priceSale', { keyboardType: 'decimal-pad' })}
+            
+            {priceSale && parseFloat(priceSale) > 0 && parseFloat(priceMRP) > 0 && (
+              <View style={styles.discountInfo}>
+                <Icon name="pricetag" size={16} color="#16A34A" />
+                <Text style={styles.discountText}>
+                  {Math.round(((parseFloat(priceMRP) - parseFloat(priceSale)) / parseFloat(priceMRP)) * 100)}% OFF
+                </Text>
+                <Text style={styles.savingsText}>
+                  Save {currencyCode === 'INR' ? '₹' : currencyCode === 'USD' ? '$' : '€'}{(parseFloat(priceMRP) - parseFloat(priceSale)).toFixed(2)}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* PRODUCT IMAGES */}
+          {renderSectionHeader('Product Images', 'images-outline')}
+          <View style={styles.section}>
+            <Text style={styles.inputLabel}>
+              Upload Images <Text style={styles.required}>*</Text>
+            </Text>
+            <Text style={styles.helperText}>Add up to 5 images. First image will be primary.</Text>
+            
+            <View style={styles.imagesGrid}>
+              {images.map((img) => (
+                <View key={img.id} style={styles.imageCard}>
+                  <Image source={{ uri: img.uri }} style={styles.productImage} />
+                  {img.isPrimary && (
+                    <View style={styles.primaryBadge}>
+                      <Text style={styles.primaryText}>Primary</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={() => handleRemoveImage(img.id)}
+                  >
+                    <Icon name="close-circle" size={24} color={Colors.whiteColor} />
+                  </TouchableOpacity>
+                  {!img.isPrimary && (
+                    <TouchableOpacity
+                      style={styles.setPrimaryButton}
+                      onPress={() => handleSetPrimaryImage(img.id)}
+                    >
+                      <Text style={styles.setPrimaryText}>Set Primary</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+              
+              {images.length < 5 && (
+                <TouchableOpacity style={styles.addImageButton} onPress={handlePickImages}>
+                  <Icon name="add-circle-outline" size={40} color={Colors.warmBrownColor} />
+                  <Text style={styles.addImageText}>Add Image</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            {errors.images && (
+              <Text style={styles.errorText}>{errors.images}</Text>
+            )}
+          </View>
+
+          {/* INVENTORY */}
+          {renderSectionHeader('Inventory', 'cube-outline')}
+          <View style={styles.section}>
+            {renderInput('Stock Quantity', stockQty, setStockQty, '0.00', 'stockQty', { required: true, keyboardType: 'decimal-pad' })}
+            <Text style={styles.helperText}>Unit: {unit || 'meter'}</Text>
+          </View>
+
+          {/* COMPLIANCE */}
+          {renderSectionHeader('Compliance Information', 'globe-outline')}
+          <View style={styles.section}>
+            {renderInput('Country of Origin', countryOfOrigin, setCountryOfOrigin, 'e.g., India', 'countryOfOrigin')}
+            {renderInput('Manufacturer Details', manufacturerDetails, setManufacturerDetails, 'Manufacturer name and address', 'manufacturerDetails', { multiline: true })}
+            {renderInput('Packer Details', packerDetails, setPackerDetails, 'Packer name and address', 'packerDetails', { multiline: true })}
+            {renderInput('Importer Details', importerDetails, setImporterDetails, 'Importer name and address (if applicable)', 'importerDetails', { multiline: true })}
+            {renderInput('Manufacturing Month & Year', mfgMonthYear, setMfgMonthYear, 'e.g., Aug 2025', 'mfgMonthYear')}
+            {renderInput('Customer Care', customerCare, setCustomerCare, 'Customer care contact details', 'customerCare', { multiline: true })}
+          </View>
+
+          {/* Save Button */}
             <CustomButton
               title={mode === 'add' ? 'Add Product' : 'Save Changes'}
               onPress={handleSave}
+            loading={loading}
               style={styles.saveButton}
             />
+
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => navigation.goBack()}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-          </View>
+
+          <View style={styles.bottomPadding} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -326,189 +723,334 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  keyboardAvoid: {
+  flex: {
     flex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     backgroundColor: Colors.whiteColor,
     borderBottomWidth: 1,
     borderBottomColor: Colors.inputBorderColor,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.inputBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: Colors.textPrimary,
+    padding: 4,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
   },
   placeholder: {
-    width: 40,
+    width: 32,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
-    flex: 1,
+    padding: 16,
   },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: 15,
-  },
-  imageUploadContainer: {
-    width: '100%',
-    height: 200,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: Colors.inputBorderColor,
-    backgroundColor: Colors.inputBackground,
-    overflow: 'hidden',
-  },
-  uploadPlaceholder: {
-    flex: 1,
+  sectionHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  uploadIcon: {
-    fontSize: 48,
+    marginTop: 20,
     marginBottom: 12,
   },
-  uploadText: {
+  sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginLeft: 8,
+    fontFamily: GILROY_SEMIBOLD,
   },
-  uploadSubtext: {
-    fontSize: 13,
-    color: Colors.grey,
+  section: {
+    backgroundColor: Colors.whiteColor,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
   },
-  uploadedImage: {
-    width: '100%',
-    height: '100%',
+  inputContainer: {
+    marginBottom: 16,
   },
-  changeImageButton: {
-    marginTop: 12,
-    alignSelf: 'center',
-  },
-  changeImageText: {
+  inputLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: Colors.warmBrownColor,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: Colors.textPrimary,
     marginBottom: 8,
+    fontFamily: GILROY_MEDIUM,
   },
-  categorySelector: {
-    marginBottom: 20,
+  required: {
+    color: '#DC2626',
   },
-  categoryScroll: {
-    flexGrow: 0,
-  },
-  categoryOption: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    backgroundColor: Colors.inputBackground,
+  input: {
     borderWidth: 1,
     borderColor: Colors.inputBorderColor,
-    marginRight: 10,
-  },
-  categoryOptionActive: {
-    backgroundColor: Colors.warmBrownColor,
-    borderColor: Colors.warmBrownColor,
-  },
-  categoryOptionText: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     fontSize: 14,
-    fontWeight: '600',
     color: Colors.textPrimary,
-  },
-  categoryOptionTextActive: {
-    color: Colors.whiteColor,
-  },
-  textAreaContainer: {
     backgroundColor: Colors.inputBackground,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.inputBorderColor,
-    padding: 12,
+    fontFamily: GILROY_REGULAR,
   },
   textArea: {
-    fontSize: 15,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 14,
     color: Colors.textPrimary,
+    backgroundColor: Colors.inputBackground,
     minHeight: 100,
+    textAlignVertical: 'top',
+    fontFamily: GILROY_REGULAR,
   },
-  availabilityContainer: {
+  dropdown: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: Colors.inputBackground,
+  },
+  dropdownFocused: {
+    borderColor: Colors.warmBrownColor,
+    borderWidth: 1.5,
+  },
+  dropdownPlaceholder: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontFamily: GILROY_REGULAR,
+  },
+  dropdownSelectedText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_MEDIUM,
+  },
+  dropdownSearchInput: {
+    height: 40,
+    fontSize: 14,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontFamily: GILROY_REGULAR,
+  },
+  dropdownIcon: {
+    marginRight: 5,
+  },
+  dropdownContainer: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    marginTop: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_REGULAR,
+    paddingVertical: 4,
+  },
+  dropdownLeftIcon: {
+    marginRight: 8,
+  },
+  dropdownRightIcon: {
+    marginLeft: 8,
+  },
+  otherInput: {
+    marginTop: 0,
+  },
+  backToDropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingVertical: 6,
+  },
+  backToDropdownText: {
+    fontSize: 13,
+    color: Colors.warmBrownColor,
+    marginLeft: 4,
+    fontFamily: GILROY_MEDIUM,
+  },
+  inputError: {
+    borderColor: '#DC2626',
+    borderWidth: 1.5,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#DC2626',
+    marginTop: 4,
+    fontFamily: GILROY_REGULAR,
+  },
+  charCount: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'right',
+    marginTop: 4,
+    fontFamily: GILROY_REGULAR,
+  },
+  helperText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: 12,
+    fontFamily: GILROY_REGULAR,
+  },
+  imagesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  imageCard: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  primaryBadge: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    backgroundColor: Colors.warmBrownColor,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  primaryText: {
+    fontSize: 10,
+    color: Colors.whiteColor,
+    fontWeight: '600',
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+  },
+  setPrimaryButton: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    right: 4,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  setPrimaryText: {
+    fontSize: 10,
+    color: Colors.whiteColor,
+    textAlign: 'center',
+    fontWeight: '600',
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  addImageButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.warmBrownColor,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.inputBackground,
+  },
+  addImageText: {
+    fontSize: 12,
+    color: Colors.warmBrownColor,
+    marginTop: 4,
+    fontFamily: GILROY_MEDIUM,
+  },
+  discountInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  discountText: {
+    fontSize: 14,
+    color: '#16A34A',
+    fontWeight: '600',
+    marginLeft: 6,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  savingsText: {
+    fontSize: 12,
+    color: '#16A34A',
+    marginLeft: 8,
+    fontFamily: GILROY_REGULAR,
+  },
+  switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.inputBackground,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 8,
+    marginTop: 8,
     borderWidth: 1,
     borderColor: Colors.inputBorderColor,
   },
-  availabilityInfo: {
+  switchInfo: {
     flex: 1,
-    marginRight: 15,
+    marginRight: 12,
   },
-  availabilityTitle: {
+  switchLabel: {
     fontSize: 15,
     fontWeight: '600',
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 2,
+    fontFamily: GILROY_SEMIBOLD,
   },
-  availabilitySubtext: {
+  switchSubtext: {
     fontSize: 13,
-    color: Colors.grey,
-  },
-  actionButtons: {
-    marginTop: 10,
+    color: Colors.textSecondary,
+    fontFamily: GILROY_REGULAR,
   },
   saveButton: {
-    marginBottom: 15,
+    marginTop: 24,
+    backgroundColor: Colors.warmBrownColor,
   },
   cancelButton: {
-    paddingVertical: 15,
+    marginTop: 12,
+    paddingVertical: 14,
     alignItems: 'center',
-    backgroundColor: Colors.inputBackground,
-    borderRadius: 12,
+    justifyContent: 'center',
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: Colors.inputBorderColor,
+    backgroundColor: Colors.inputBackground,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  bottomPadding: {
+    height: 40,
   },
 });
 
 export default AddEditProduct;
-

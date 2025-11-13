@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import CustomerHomeScreen from './CustomerHomeScreen';
+import ShopHomeScreen from './ShopHomeScreen';
 import TailorDashboard from './TailorDashboard';
 import ShopTailorDashboard from './ShopTailorDashboard';
 
@@ -15,6 +16,8 @@ export default function Home({ navigation }: HomeProps): React.JSX.Element {
   switch (userRole) {
     case 'customer':
       return <CustomerHomeScreen />;
+    case 'shop':
+      return <ShopHomeScreen />;
     case 'tailor':
       return <TailorDashboard />;
     case 'tailor_shop':

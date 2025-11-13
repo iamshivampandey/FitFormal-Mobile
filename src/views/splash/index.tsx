@@ -1,18 +1,56 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, UserRole } from '../../context/AuthContext';
 import { Colors } from '../../utils/colors';
+import StorageService from '../../services/storage.service';
+import { GILROY_BOLD, GILROY_MEDIUM } from '../../utils/fonts';
 
 export default function Splash(): React.JSX.Element {
   const navigation = useNavigation();
-  const { isAuthenticated } = useAuth();
+  const { signIn } = useAuth();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  // Check authentication status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      console.log('=== SPLASH: Checking authentication status ===');
+      const token = await StorageService.getToken();
+      const role = await StorageService.getRole();
+      
+      console.log('[Splash] Token exists:', !!token);
+      console.log('[Splash] Role exists:', !!role);
+      console.log('[Splash] Role value:', role);
+      
+      if (token && role) {
+        console.log('✓ [Splash] Existing session found, role:', role);
+        // Restore authentication state
+        signIn(role as UserRole);
+        setIsUserAuthenticated(true);
+        console.log('✓ [Splash] Auth state restored in context');
+      } else {
+        console.log('✗ [Splash] No existing session found (token:', !!token, ', role:', !!role, ')');
+        setIsUserAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('✗ [Splash] Error checking auth status:', error);
+      setIsUserAuthenticated(false);
+    } finally {
+      setAuthChecked(true);
+      console.log('=== SPLASH: Auth check complete ===');
+    }
+  };
 
   useEffect(() => {
     // Start animations
@@ -50,24 +88,27 @@ export default function Splash(): React.JSX.Element {
       })
     ).start();
 
-    // Navigate after animations
-    const timer = setTimeout(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
-        navigation.reset({
-          index: 0,
-          routes: [
-            { name: (isAuthenticated ? 'TabBarNavigation' : 'AuthStackNavigation') as never },
-          ],
+    // Navigate after animations AND auth check is complete
+    if (authChecked) {
+      const timer = setTimeout(() => {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          console.log('→ Navigating from splash. isAuthenticated:', isUserAuthenticated);
+          navigation.reset({
+            index: 0,
+            routes: [
+              { name: (isUserAuthenticated ? 'TabBarNavigation' : 'AuthStackNavigation') as never },
+            ],
+          });
         });
-      });
-    }, 2500);
+      }, 2500);
 
-    return () => clearTimeout(timer);
-  }, [navigation, isAuthenticated, fadeAnim, scaleAnim, slideAnim, rotateAnim]);
+      return () => clearTimeout(timer);
+    }
+  }, [navigation, authChecked, isUserAuthenticated, fadeAnim, scaleAnim, slideAnim, rotateAnim, signIn]);
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
@@ -145,6 +186,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.whiteColor,
     letterSpacing: 2,
+    fontFamily: GILROY_BOLD,
   },
   title: {
     fontSize: 36,
@@ -152,11 +194,13 @@ const styles = StyleSheet.create({
     color: Colors.warmBrownColor,
     marginBottom: 12,
     letterSpacing: 1,
+    fontFamily: GILROY_BOLD,
   },
   subtitle: {
     fontSize: 16,
     color: Colors.grey,
     fontWeight: '500',
     letterSpacing: 0.5,
+    fontFamily: GILROY_MEDIUM,
   },
 });

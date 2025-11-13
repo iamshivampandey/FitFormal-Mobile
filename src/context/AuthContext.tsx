@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-export type UserRole = 'customer' | 'tailor' | 'tailor_shop';
+export type UserRole = 'customer' | 'tailor' | 'tailor_shop' | 'shop';
 
 export type AuthContextValue = {
   isAuthenticated: boolean;
@@ -17,11 +17,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
   const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   const signIn = useCallback((role: UserRole) => {
+    console.log('Signing in with role:', role);
     setIsAuthenticated(true);
     setUserRole(role);
   }, []);
 
   const signOut = useCallback(() => {
+    console.log('Signing out');
     setIsAuthenticated(false);
     setUserRole(null);
   }, []);

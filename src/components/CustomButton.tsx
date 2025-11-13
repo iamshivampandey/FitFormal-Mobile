@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Colors } from '../utils/colors';
+import { GILROY_SEMIBOLD } from '../utils/fonts';
 
 interface CustomButtonProps {
   title: string;
@@ -117,6 +118,7 @@ const styles = StyleSheet.create({
   text: {
     fontWeight: '600',
     textAlign: 'center',
+    fontFamily: GILROY_SEMIBOLD,
   },
   smallText: {
     fontSize: 14,

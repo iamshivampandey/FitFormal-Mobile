@@ -13,24 +13,34 @@ import { palceholders, strings } from "../../utils/string/strings";
 import en from "../../utils/string/en";
 import CustomButton from "../../components/CustomButton";
 import CustomInput from "../../components/CustomInput";
+import { signUpWithEmailAndPassword } from "../../utils/authApi";
+import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from "../../utils/fonts";
 
-const SignUpScreen = ({ navigation, route }: any) => {
+const SignUp = ({ navigation, route }: any) => {
   const { userRole, roleData } = route.params || {};
   const [name, setName] = useState("");
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [age, setAge] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [isSelected, setIsSelected] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [nameError, setNameError] = useState("");
   const [userNameError, setUserNameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [checkboxError, setCheckboxError] = useState("");
   const [ageError, setAgeError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   const handleSignUp = async () => {
     let valid = true;
+
+    // Split name into firstName and lastName
+    const nameParts = name.trim().split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || nameParts[0] || "";
 
     if (name === "") {
       setNameError("Name is required");
@@ -46,7 +56,7 @@ const SignUpScreen = ({ navigation, route }: any) => {
     }
 
     if (email.trim() === "") {
-      setEmailError("Email or phone is required");
+      setEmailError("Email is required");
       valid = false;
     } else if (!validateEmail(email)) {
       setEmailError("Invalid email address");
@@ -55,12 +65,16 @@ const SignUpScreen = ({ navigation, route }: any) => {
       setEmailError("");
     }
 
-    if (age.trim() === "") {
-      setAgeError("Age is required");
+    if (phoneNumber.trim() === "") {
+      setPhoneError("Phone number is required");
+      valid = false;
+    } else if (phoneNumber.length < 10) {
+      setPhoneError("Invalid phone number");
       valid = false;
     } else {
-      setAgeError("");
+      setPhoneError("");
     }
+    
     if (password.trim() === "") {
       setPasswordError("Password is required");
       valid = false;
@@ -70,6 +84,7 @@ const SignUpScreen = ({ navigation, route }: any) => {
     } else {
       setPasswordError("");
     }
+    
     if (valid) {
       if (!isSelected) {
         Alert.alert("Terms required", "You must agree to the Terms & Privacy");
@@ -77,15 +92,51 @@ const SignUpScreen = ({ navigation, route }: any) => {
       } else {
         setCheckboxError("");
       }
+      
+      setLoading(true);
+      
       try {
-        // Simulate successful signup
-        Alert.alert("Success", `Account created successfully as ${roleData?.title || 'User'}! Please verify your OTP.`);
-        navigation.navigate("OtpVerification", {
-          data: { email, name, userName, age, userRole },
-          type: 'signUp'
-        });
+        // const signupData = {
+        //   email: email.trim(),
+        //   password: password,
+        //   firstName: firstName,
+        //   lastName: lastName,
+        //   phoneNumber: phoneNumber.trim(),
+        //   roleName: userRole || 'customer',
+        // };
+
+        // console.log("Attempting signup with data:", signupData);
+        
+        // const response = await signUpWithEmailAndPassword(signupData);
+        
+        // setLoading(false);
+        
+        // if (response.data) {
+        //   Alert.alert(
+        //     "Success", 
+        //     `Account created successfully as ${roleData?.title || 'User'}! Please verify your OTP.`,
+        //     [
+        //       {
+        //         text: "OK",
+        //         onPress: () => {
+        //           navigation.navigate("OtpVerification", {
+        //             data: { email, name, userName, age, userRole },
+        //             type: 'signUp'
+        //           });
+        //         }
+        //       }
+        //     ]
+        //   );
+        // }
+
+                          navigation.navigate("OtpVerification", {
+                    data: { email, name, userName, age, userRole },
+                    type: 'signUp'
+                  });
       } catch (e: any) {
-        Alert.alert("Error", e?.message || en.InternalServerError);
+        setLoading(false);
+        const errorMessage = e.response?.data?.message || e.message || en.InternalServerError;
+        Alert.alert("Signup Failed", errorMessage);
       }
     }
   };
@@ -121,7 +172,7 @@ const SignUpScreen = ({ navigation, route }: any) => {
           />
           
           <CustomInput
-            placeholder={palceholders.USERNAME}
+            placeholder={palceholders.LAST_NAME}
             value={userName}
             onChangeText={(newText) => {
               setUserNameError("");
@@ -130,7 +181,7 @@ const SignUpScreen = ({ navigation, route }: any) => {
             error={userNameError}
           />
           
-          <CustomInput
+          {/* <CustomInput
             placeholder={palceholders.AGE}
             value={age}
             onChangeText={(newText) => {
@@ -138,7 +189,8 @@ const SignUpScreen = ({ navigation, route }: any) => {
               setAge(newText);
             }}
             error={ageError}
-          />
+            keyboardType="numeric"
+          /> */}
           
           <CustomInput
             placeholder={palceholders.EMAIL_NUMBER}
@@ -149,6 +201,18 @@ const SignUpScreen = ({ navigation, route }: any) => {
             }}
             error={emailError}
             autoCapitalize="none"
+            keyboardType="email-address"
+          />
+
+          <CustomInput
+            placeholder="Phone Number"
+            value={phoneNumber}
+            onChangeText={(newText) => {
+              setPhoneError("");
+              setPhoneNumber(newText);
+            }}
+            error={phoneError}
+            keyboardType="phone-pad"
           />
           
           <CustomInput
@@ -177,6 +241,7 @@ const SignUpScreen = ({ navigation, route }: any) => {
           title="Sign Up"
           onPress={handleSignUp}
           style={styles.button}
+          loading={loading}
         />
         <View style={styles.noteViwe}>
           <Text style={styles.noteText}>
@@ -197,7 +262,7 @@ const SignUpScreen = ({ navigation, route }: any) => {
   );
 };
 
-export default SignUpScreen;
+export default SignUp;
 
 const styles = StyleSheet.create({
   mainContainer: {
@@ -214,6 +279,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.warmBrownColor,
     textAlign: "center",
+    fontFamily: GILROY_BOLD,
   },
   subText: {
     textAlign: "center",
@@ -222,11 +288,13 @@ const styles = StyleSheet.create({
     lineHeight: 25.2,
     fontSize: 14,
     color: "#757575",
+    fontFamily: GILROY_REGULAR,
   },
   colorText: {
     color: Colors.warmBrownColor,
     fontSize: 12,
     fontWeight: "400",
+    fontFamily: GILROY_REGULAR,
   },
   container: {
     marginBottom: 20,
@@ -246,10 +314,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.warmBrownColor,
     marginBottom: 5,
+    fontFamily: GILROY_SEMIBOLD,
   },
   roleDescription: {
     fontSize: 14,
     color: Colors.textSecondary,
+    fontFamily: GILROY_REGULAR,
   },
   inpputColor: {
     backgroundColor: Colors.inputBackground,
@@ -277,6 +347,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
     width: "80%",
+    fontFamily: GILROY_REGULAR,
   },
   button: {
     backgroundColor: Colors.buttonBgColor,
@@ -291,7 +362,8 @@ const styles = StyleSheet.create({
   textstyle: {
     color: Colors.whiteColor,
     fontSize: 16,
-    fontWeight: '600'
+    fontWeight: '600',
+    fontFamily: GILROY_SEMIBOLD,
   },
   noteViwe: {
     marginHorizontal: 15,
@@ -303,6 +375,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 12,
     fontWeight: "400",
+    fontFamily: GILROY_REGULAR,
   },
   boldNotetext: {
     fontWeight: "500",
@@ -310,11 +383,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 5,
     fontSize: 12,
+    fontFamily: GILROY_MEDIUM,
   },
   boldNotetextPolicy: {
     fontWeight: "bold",
     color: "black",
     textAlign: "center",
+    fontFamily: GILROY_BOLD,
   },
   signUpBtn: {
     flexDirection: "row",
@@ -325,12 +400,14 @@ const styles = StyleSheet.create({
     color: Colors.grey,
     fontSize: 12,
     fontWeight: "400",
+    fontFamily: GILROY_REGULAR,
   },
   errorText: {
     color: "red",
     fontSize: 14,
     marginLeft: 30,
     marginTop: 2,
+    fontFamily: GILROY_REGULAR,
   },
   checkBoxIcon: {
     height: 18,
@@ -344,10 +421,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
     textAlign: 'center',
-    // fontFamily: GILROY_BOLD,
+    fontFamily: GILROY_BOLD,
     lineHeight: 44,
   },
   appName: {
     color: Colors.warmBrownColor,
+    fontFamily: GILROY_BOLD,
   },
 });

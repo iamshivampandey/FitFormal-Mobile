@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
+import { GILROY_SEMIBOLD, GILROY_REGULAR } from '../../utils/fonts';
 
 export default function Cart(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -35,10 +36,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
     color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
   },
   subtitle: {
     fontSize: 16,
     color: Colors.grey,
+    fontFamily: GILROY_REGULAR,
   },
 });
 

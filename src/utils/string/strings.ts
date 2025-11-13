@@ -24,7 +24,7 @@ export enum PlaceholderKeys {
   EMAIL_NUMBER = 'EMAIL_NUMBER',
   PASSWORD = 'PASSWORD',
   NAME = 'NAME',
-  USERNAME = 'USERNAME',
+  LAST_NAME = 'LAST_NAME',
   AGE = 'AGE',
 }
 
@@ -52,10 +52,10 @@ export const strings: Record<StringKeys, string> = {
 };
 
 export const palceholders: Record<PlaceholderKeys, string> = {
-  [PlaceholderKeys.EMAIL_NUMBER]: 'Email or phone number',
+  [PlaceholderKeys.EMAIL_NUMBER]: 'Email Address',
   [PlaceholderKeys.PASSWORD]: 'Password',
   [PlaceholderKeys.NAME]: 'First Name',
-  [PlaceholderKeys.USERNAME]: 'Last Name',
+  [PlaceholderKeys.LAST_NAME]: 'Last Name',
   [PlaceholderKeys.AGE]: 'Phone Number',
 };
 

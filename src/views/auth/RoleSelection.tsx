@@ -10,6 +10,7 @@ import {
 import { Colors } from '../../utils/colors';
 import { strings } from '../../utils/string/strings';
 import CustomButton from '../../components/CustomButton';
+import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
 
 interface UserRole {
   id: string;
@@ -37,6 +38,20 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
         'Get premium formal wear at best prices'
       ],
       color: '#4CAF50'
+    },
+    {
+      id: 'shop',
+      title: 'Shop Owner',
+      description: 'Sell formal fabrics and accessories',
+      icon: '🏬',
+      benefits: [
+        'List and sell formal fabrics online',
+        'Manage your product inventory',
+        'Accept and process customer orders',
+        'Track sales and revenue',
+        'Grow your business reach'
+      ],
+      color: '#FF9800'
     },
     {
       id: 'tailor',
@@ -194,12 +209,14 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: 10,
+    fontFamily: GILROY_BOLD,
   },
   subtitle: {
     fontSize: 16,
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
+    fontFamily: GILROY_REGULAR,
   },
   rolesContainer: {
     marginBottom: 30,
@@ -241,11 +258,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 5,
+    fontFamily: GILROY_BOLD,
   },
   roleDescription: {
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 20,
+    fontFamily: GILROY_REGULAR,
   },
   benefitsContainer: {
     marginTop: 10,
@@ -255,6 +274,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 10,
+    fontFamily: GILROY_SEMIBOLD,
   },
   benefitItem: {
     flexDirection: 'row',
@@ -266,12 +286,14 @@ const styles = StyleSheet.create({
     color: Colors.warmBrownColor,
     marginRight: 10,
     marginTop: 2,
+    fontFamily: GILROY_BOLD,
   },
   benefitText: {
     fontSize: 14,
     color: Colors.textSecondary,
     flex: 1,
     lineHeight: 20,
+    fontFamily: GILROY_REGULAR,
   },
   selectedIndicator: {
     position: 'absolute',
@@ -293,11 +315,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 10,
+    fontFamily: GILROY_SEMIBOLD,
   },
   infoText: {
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 22,
+    fontFamily: GILROY_REGULAR,
   },
   bottomContainer: {
     paddingHorizontal: 20,
@@ -317,6 +341,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.warmBrownColor,
     fontWeight: '500',
+    fontFamily: GILROY_MEDIUM,
   },
 });
 

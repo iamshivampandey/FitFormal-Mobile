@@ -11,6 +11,7 @@ import {
 import { Colors } from '../../utils/colors';
 import { strings } from '../../utils/string/strings';
 import CustomButton from '../../components/CustomButton';
+import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
 
 interface OtpVerificationProps {
   navigation: any;
@@ -207,12 +208,14 @@ const styles = StyleSheet.create({
     color: Colors.warmBrownColor,
     textAlign: 'center',
     marginBottom: 10,
+    fontFamily: GILROY_BOLD,
   },
   subtitle: {
     fontSize: 16,
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
+    fontFamily: GILROY_REGULAR,
   },
   otpContainer: {
     flexDirection: 'row',
@@ -231,6 +234,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     textAlign: 'center',
+    fontFamily: GILROY_SEMIBOLD,
   },
   otpInputFilled: {
     borderColor: Colors.warmBrownColor,
@@ -243,11 +247,13 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 14,
     color: Colors.grey,
+    fontFamily: GILROY_REGULAR,
   },
   resendText: {
     fontSize: 14,
     color: Colors.warmBrownColor,
     fontWeight: '600',
+    fontFamily: GILROY_SEMIBOLD,
   },
   verifyButton: {
     marginBottom: 20,
@@ -260,6 +266,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.warmBrownColor,
     fontWeight: '500',
+    fontFamily: GILROY_MEDIUM,
   },
 });
 

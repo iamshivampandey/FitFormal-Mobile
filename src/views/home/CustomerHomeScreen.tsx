@@ -14,10 +14,12 @@ import {
   ImageSourcePropType,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../utils/colors';
 import { strings } from '../../utils/string/strings';
 import { productImages } from '../../utils/images';
 import CustomButton from '../../components/CustomButton';
+import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR } from '../../utils/fonts';
 
 const { width } = Dimensions.get('window');
 
@@ -59,6 +61,7 @@ interface Shop {
 }
 
 const CustomerHomeScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const insets = useSafeAreaInsets();
@@ -230,8 +233,15 @@ const CustomerHomeScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const handleProductPress = (item: Product) => {
+    (navigation.navigate as any)('ProductDetail', item);
+  };
+
   const renderProduct = ({ item }: { item: Product }) => (
-    <TouchableOpacity style={styles.productCard}>
+    <TouchableOpacity 
+      style={styles.productCard}
+      onPress={() => handleProductPress(item)}
+    >
       <View style={styles.productImageContainer}>
         <Image source={item.image} style={styles.productImage} resizeMode="cover" />
         {item.isNew && <View style={styles.newBadge}><Text style={styles.badgeText}>NEW</Text></View>}
@@ -345,7 +355,9 @@ const CustomerHomeScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Featured Products</Text>
-            <TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => (navigation.navigate as any)('ProductsList', { title: 'Featured Products' })}
+            >
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -394,7 +406,10 @@ const CustomerHomeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.quickActionItem}>
+            <TouchableOpacity 
+              style={styles.quickActionItem}
+              onPress={() => navigation.navigate('BookMeasurement' as never)}
+            >
               <Text style={styles.quickActionIcon}>📏</Text>
               <Text style={styles.quickActionText}>Book Measurement</Text>
             </TouchableOpacity>
@@ -437,6 +452,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: Colors.textPrimary,
+    fontFamily: GILROY_BOLD,
   },
   profileButton: {
     width: 45,
@@ -464,6 +480,7 @@ const styles = StyleSheet.create({
     height: 50,
     color: Colors.textPrimary,
     fontSize: 16,
+    fontFamily: GILROY_REGULAR,
   },
   searchButton: {
     padding: 10,
@@ -487,11 +504,13 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     paddingHorizontal: 20,
     marginBottom: 15,
+    fontFamily: GILROY_BOLD,
   },
   seeAllText: {
     fontSize: 16,
     color: Colors.warmBrownColor,
     fontWeight: '600',
+    fontFamily: GILROY_SEMIBOLD,
   },
   categoriesList: {
     paddingHorizontal: 15,
@@ -519,9 +538,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
   },
   selectedCategoryText: {
     color: Colors.whiteColor,
+    fontFamily: GILROY_SEMIBOLD,
   },
   productsList: {
     paddingHorizontal: 15,
@@ -567,6 +588,7 @@ const styles = StyleSheet.create({
     color: Colors.whiteColor,
     fontSize: 10,
     fontWeight: '700',
+    fontFamily: GILROY_BOLD,
   },
   productInfo: {
     padding: 15,
@@ -576,11 +598,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 4,
+    fontFamily: GILROY_SEMIBOLD,
   },
   shopName: {
     fontSize: 12,
     color: Colors.grey,
     marginBottom: 8,
+    fontFamily: GILROY_REGULAR,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -592,11 +616,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.warmBrownColor,
     marginRight: 8,
+    fontFamily: GILROY_BOLD,
   },
   originalPrice: {
     fontSize: 14,
     color: Colors.grey,
     textDecorationLine: 'line-through',
+    fontFamily: GILROY_REGULAR,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -605,6 +631,7 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 12,
     color: Colors.grey,
+    fontFamily: GILROY_REGULAR,
   },
   tailorsList: {
     paddingHorizontal: 15,
@@ -633,6 +660,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: Colors.whiteColor,
+    fontFamily: GILROY_BOLD,
   },
   tailorInfo: {
     flex: 1,
@@ -642,11 +670,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 4,
+    fontFamily: GILROY_BOLD,
   },
   tailorSpecialization: {
     fontSize: 12,
     color: Colors.grey,
     marginBottom: 8,
+    fontFamily: GILROY_REGULAR,
   },
   tailorDetails: {
     flexDirection: 'row',
@@ -656,10 +686,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginRight: 15,
+    fontFamily: GILROY_REGULAR,
   },
   tailorDistance: {
     fontSize: 12,
     color: Colors.textSecondary,
+    fontFamily: GILROY_REGULAR,
   },
   tailorFooter: {
     flexDirection: 'row',
@@ -668,11 +700,13 @@ const styles = StyleSheet.create({
   tailorExperience: {
     fontSize: 11,
     color: Colors.grey,
+    fontFamily: GILROY_REGULAR,
   },
   tailorPrice: {
     fontSize: 12,
     fontWeight: '600',
     color: Colors.warmBrownColor,
+    fontFamily: GILROY_SEMIBOLD,
   },
   bookButton: {
     backgroundColor: Colors.warmBrownColor,
@@ -684,6 +718,7 @@ const styles = StyleSheet.create({
     color: Colors.whiteColor,
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: GILROY_SEMIBOLD,
   },
   shopCard: {
     backgroundColor: Colors.inputBackground,
@@ -719,19 +754,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginRight: 15,
+    fontFamily: GILROY_REGULAR,
   },
   shopDistance: {
     fontSize: 12,
     color: Colors.textSecondary,
+    fontFamily: GILROY_REGULAR,
   },
   shopProducts: {
     fontSize: 12,
     color: Colors.grey,
     marginBottom: 2,
+    fontFamily: GILROY_REGULAR,
   },
   shopDelivery: {
     fontSize: 12,
     color: Colors.grey,
+    fontFamily: GILROY_REGULAR,
   },
   visitButton: {
     backgroundColor: Colors.warmBrownColor,
@@ -743,6 +782,7 @@ const styles = StyleSheet.create({
     color: Colors.whiteColor,
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: GILROY_SEMIBOLD,
   },
   quickActions: {
     flexDirection: 'row',
@@ -768,6 +808,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     textAlign: 'center',
+    fontFamily: GILROY_SEMIBOLD,
   },
 });
 

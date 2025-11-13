@@ -93,6 +93,69 @@ export default function TabBarNavigation(): React.JSX.Element {
     );
   }
 
+  // Shop Owner tabs (no tailor services)
+  if (userRole === 'shop') {
+    return (
+      <TabBar.Navigator screenOptions={commonScreenOptions}>
+        <TabBar.Screen
+          name="Dashboard"
+          component={HomeStackNavigation}
+          options={{
+            tabBarLabel: 'Dashboard',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'grid' : 'grid-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Products"
+          component={ShopStackNavigation}
+          options={{
+            tabBarLabel: 'Products',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'pricetags' : 'pricetags-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Orders"
+          component={CartStackNavigation}
+          options={{
+            tabBarLabel: 'Orders',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'receipt' : 'receipt-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Profile"
+          component={ProfileStackNavigation}
+          options={{
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'person' : 'person-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+      </TabBar.Navigator>
+    );
+  }
+
   // Tailor tabs
   if (userRole === 'tailor') {
     return (
@@ -227,11 +290,11 @@ export default function TabBarNavigation(): React.JSX.Element {
         component={HomeStackNavigation}
         options={{
           tabBarIcon: ({ focused, size }) => (
-            <FastImage
-              source={focused ? tabIcons.homeActive : tabIcons.home}
-              style={{ width: size, height: size }}
-              resizeMode={FastImage.resizeMode.contain}
-            />
+            <Icon
+                name={focused ? 'person' : 'person-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
           ),
         }}
       />
@@ -240,11 +303,11 @@ export default function TabBarNavigation(): React.JSX.Element {
         component={CartStackNavigation}
         options={{
           tabBarIcon: ({ focused, size }) => (
-            <FastImage
-              source={focused ? tabIcons.cartActive : tabIcons.cart}
-              style={{ width: size, height: size }}
-              resizeMode={FastImage.resizeMode.contain}
-            />
+            <Icon
+            name={focused ? 'person' : 'person-outline'}
+            size={size}
+            color={focused ? Colors.warmBrownColor : Colors.grey}
+          />
           ),
         }}
       />
@@ -253,11 +316,11 @@ export default function TabBarNavigation(): React.JSX.Element {
         component={ProfileStackNavigation}
         options={{
           tabBarIcon: ({ focused, size }) => (
-            <FastImage
-              source={focused ? tabIcons.profileActive : tabIcons.profile}
-              style={{ width: size, height: size }}
-              resizeMode={FastImage.resizeMode.contain}
-            />
+            <Icon
+                name={focused ? 'person' : 'person-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
           ),
         }}
       />

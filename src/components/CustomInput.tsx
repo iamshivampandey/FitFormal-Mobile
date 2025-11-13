@@ -7,6 +7,7 @@ import {
   TextInputProps,
 } from 'react-native';
 import { Colors } from '../utils/colors';
+import { GILROY_REGULAR } from '../utils/fonts';
 
 interface CustomInputProps extends TextInputProps {
   error?: string;
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.inputBackground,
-    color: Colors.blackColork,
+    color: Colors.blackColor,
     height: 56,
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -48,13 +49,15 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     // borderWidth: 0.17,
     borderColor: Colors.inputBorderColor,
-    fontSize: 14
+    fontSize: 14,
+    fontFamily: GILROY_REGULAR,
   },
   errorText: {
     color: Colors.errorRed,
     fontSize: 12,
     marginLeft: 16,
     marginTop: 4,
+    fontFamily: GILROY_REGULAR,
   },
 });
 
