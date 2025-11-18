@@ -4,19 +4,22 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { strings } from '../../utils/string/strings';
 import CustomButton from '../../components/CustomButton';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
+import * as Images from '../../utils/images';
 
 interface UserRole {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon: ImageSourcePropType;
   benefits: string[];
   color: string;
 }
@@ -29,7 +32,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
       id: 'customer',
       title: 'Customer',
       description: 'Buy formal fabric and get custom clothing',
-      icon: '👔',
+      icon: Images.person_icon, // TODO: Replace with shirt/suit icon when available
       benefits: [
         'Browse and purchase formal fabrics online',
         'Book home measurement service',
@@ -43,7 +46,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
       id: 'shop',
       title: 'Shop Owner',
       description: 'Sell formal fabrics and accessories',
-      icon: '🏬',
+      icon: Images.shopping_bag, // TODO: Replace with store icon when available
       benefits: [
         'List and sell formal fabrics online',
         'Manage your product inventory',
@@ -57,7 +60,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
       id: 'tailor',
       title: 'Tailor',
       description: 'Provide measurement and stitching services',
-      icon: '✂️',
+      icon: Images.scissor_icon,
       benefits: [
         'Visit customer homes for measurements',
         'Stitch custom formal wear',
@@ -71,7 +74,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
       id: 'tailor_shop',
       title: 'Tailor + Shop',
       description: 'Complete end-to-end formal wear service',
-      icon: '🏪',
+      icon: Images.shopping_bag, // TODO: Replace with shop icon when available
       benefits: [
         'Bring fabric samples to customers',
         'Take measurements at home',
@@ -112,7 +115,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
       >
         <View style={styles.roleHeader}>
           <View style={[styles.iconContainer, { backgroundColor:  Colors.warmBrownColor }]}>
-            <Text style={styles.roleIcon}>{role.icon}</Text>
+            <Image source={role.icon} style={styles.roleIcon} />
           </View>
           <View style={styles.roleInfo}>
             <Text style={[styles.roleTitle, isSelected && { color:  Colors.warmBrownColor }]}>
@@ -126,7 +129,9 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
           <Text style={styles.benefitsTitle}>What you get:</Text>
           {role.benefits.map((benefit, index) => (
             <View key={index} style={styles.benefitItem}>
-              <Text style={styles.benefitBullet}>✓</Text>
+              <View style={styles.checkIconContainer}>
+                <Text style={styles.benefitBullet}>✓</Text>
+              </View>
               <Text style={styles.benefitText}>{benefit}</Text>
             </View>
           ))}
@@ -248,7 +253,9 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   roleIcon: {
-    fontSize: 28,
+    width: 32,
+    height: 32,
+    tintColor: Colors.whiteColor,
   },
   roleInfo: {
     flex: 1,
@@ -281,12 +288,19 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 8,
   },
-  benefitBullet: {
-    fontSize: 14,
-    color: Colors.warmBrownColor,
-    marginRight: 10,
+  checkIconContainer: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
     marginTop: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  benefitBullet: {
+    fontSize: 16,
+    color: Colors.warmBrownColor,
     fontFamily: GILROY_BOLD,
+    fontWeight: '700',
   },
   benefitText: {
     fontSize: 14,

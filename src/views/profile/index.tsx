@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -20,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { logoutUser } from '../../utils/authApi';
 import { getBackendRoleName } from '../../utils/constants/roles';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
+import * as Images from '../../utils/images';
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +31,6 @@ interface UserData {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  age?: string;
   roleName?: number | string;
 }
 
@@ -89,7 +90,6 @@ export default function Profile({ navigation }: any): React.JSX.Element {
         setFirstName(user.firstName || '');
         setLastName(user.lastName || '');
         setPhoneNumber(user.phoneNumber || '');
-        setAge(user.age || '');
         
         // Set role display name
         if (userRole) {
@@ -175,15 +175,6 @@ export default function Profile({ navigation }: any): React.JSX.Element {
       setPhoneError('');
     }
 
-    if (age.trim() === '') {
-      setAgeError('Age is required');
-      valid = false;
-    } else if (isNaN(Number(age)) || Number(age) < 1 || Number(age) > 150) {
-      setAgeError('Invalid age');
-      valid = false;
-    } else {
-      setAgeError('');
-    }
 
     return valid;
   };
@@ -208,7 +199,6 @@ export default function Profile({ navigation }: any): React.JSX.Element {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           phoneNumber: phoneNumber.trim(),
-          age: age.trim(),
         },
       };
 
@@ -287,7 +277,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
     <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 40 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Gradient Header */}
@@ -313,7 +303,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
                 </View>
                 {/* Edit Avatar Badge */}
                 <TouchableOpacity style={styles.editAvatarBadge}>
-                  <Text style={styles.editAvatarText}>✎</Text>
+                  <Image source={Images.edit_icon} style={styles.editAvatarIcon} />
                 </TouchableOpacity>
               </View>
               
@@ -322,6 +312,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
               <View style={styles.roleBadge}>
                 <Text style={styles.userRole}>{role}</Text>
               </View>
+              {!!email && <Text style={styles.userEmail}>{email}</Text>}
             </View>
           </SafeAreaView>
         </LinearGradient>
@@ -334,6 +325,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
                 colors={['#FFFFFF', '#F9FAFB']}
                 style={styles.statCardGradient}
               >
+                <Image source={Images.shopping_cart_icon} style={styles.statIconImage} />
                 <Text style={styles.statNumber}>12</Text>
                 <Text style={styles.statLabel}>Orders</Text>
               </LinearGradient>
@@ -343,6 +335,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
                 colors={['#FFFFFF', '#F9FAFB']}
                 style={styles.statCardGradient}
               >
+                <Image source={Images.shopping_bag} style={styles.statIconImage} />
                 <Text style={styles.statNumber}>5</Text>
                 <Text style={styles.statLabel}>Favorites</Text>
               </LinearGradient>
@@ -352,6 +345,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
                 colors={['#FFFFFF', '#F9FAFB']}
                 style={styles.statCardGradient}
               >
+                <Image source={Images.revenue_icon} style={styles.statIconImage} />
                 <Text style={styles.statNumber}>3</Text>
                 <Text style={styles.statLabel}>Reviews</Text>
               </LinearGradient>
@@ -362,16 +356,21 @@ export default function Profile({ navigation }: any): React.JSX.Element {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleContainer}>
-                <Text style={styles.cardIcon}>👤</Text>
-                <Text style={styles.cardTitle}>Personal Information</Text>
+                <View style={styles.cardIconCircle}>
+                  <Image source={Images.person_icon} style={styles.cardIconImage} />
+                </View>
+                <View>
+                  <Text style={styles.cardTitle}>Personal Information</Text>
+                  <Text style={styles.cardSubtitle}>Update your basic details</Text>
+                </View>
               </View>
               {!isEditing && (
                 <TouchableOpacity
                   onPress={() => setIsEditing(true)}
                   style={styles.editButton}
                 >
-                  <Text style={styles.editButtonText}>✎ Edit</Text>
-                </TouchableOpacity>
+                  <Image source={Images.edit_icon} style={styles.editAvatarIcon} />
+                  </TouchableOpacity>
               )}
             </View>
 
@@ -396,20 +395,8 @@ export default function Profile({ navigation }: any): React.JSX.Element {
                 }}
                 error={lastNameError}
                 editable={isEditing}
-              />
-
-              <CustomInput
-                placeholder="Age"
-                value={age}
-                onChangeText={(text) => {
-                  setAgeError('');
-                  setAge(text);
-                }}
-                error={ageError}
-                keyboardType="numeric"
-                editable={isEditing}
-              />
-
+              />        
+              
               <CustomInput
                 placeholder="Email"
                 value={email}
@@ -452,15 +439,22 @@ export default function Profile({ navigation }: any): React.JSX.Element {
 
           {/* Account Actions Card */}
           <View style={styles.card}>
-            <View style={styles.cardTitleContainer}>
-              <Text style={styles.cardIcon}>⚙️</Text>
-              <Text style={styles.cardTitle}>Account Settings</Text>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardTitleContainer}>
+                <View style={styles.cardIconCircle}>
+                  <Image source={Images.gear_icon} style={styles.cardIconImage} />
+                </View>
+                <View>
+                  <Text style={styles.cardTitle}>Account Settings</Text>
+                  <Text style={styles.cardSubtitle}>Manage your account & preferences</Text>
+                </View>
+              </View>
             </View>
             
             <TouchableOpacity style={styles.actionItem}>
               <View style={styles.actionItemLeft}>
                 <View style={styles.actionIconContainer}>
-                  <Text style={styles.actionIcon}>🔐</Text>
+                  <Image source={Images.unlock_icon} style={styles.actionIconImage} />
                 </View>
                 <Text style={styles.actionItemText}>Change Password</Text>
               </View>
@@ -470,7 +464,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
             <TouchableOpacity style={styles.actionItem}>
               <View style={styles.actionItemLeft}>
                 <View style={styles.actionIconContainer}>
-                  <Text style={styles.actionIcon}>🔒</Text>
+                  <Image source={Images.security_icon} style={styles.actionIconImage} />
                 </View>
                 <Text style={styles.actionItemText}>Privacy Settings</Text>
               </View>
@@ -480,7 +474,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
             <TouchableOpacity style={styles.actionItem}>
               <View style={styles.actionItemLeft}>
                 <View style={styles.actionIconContainer}>
-                  <Text style={styles.actionIcon}>💬</Text>
+                  <Image source={Images.support_icon} style={styles.actionIconImage} />
                 </View>
                 <Text style={styles.actionItemText}>Help & Support</Text>
               </View>
@@ -490,7 +484,8 @@ export default function Profile({ navigation }: any): React.JSX.Element {
             <TouchableOpacity style={styles.actionItem}>
               <View style={styles.actionItemLeft}>
                 <View style={styles.actionIconContainer}>
-                  <Text style={styles.actionIcon}>ℹ️</Text>
+                  {/* TODO: Replace with dedicated info_icon when available */}
+                  <Image source={Images.about_icon} style={styles.actionIconImage} />
                 </View>
                 <Text style={styles.actionItemText}>About</Text>
               </View>
@@ -507,13 +502,13 @@ export default function Profile({ navigation }: any): React.JSX.Element {
               colors={['#FEE2E2', '#FECACA']}
               style={styles.logoutGradient}
             >
-              <Text style={styles.logoutIcon}>🚪</Text>
+              <Image source={Images.logout_icon} style={styles.logoutIconImage} />
               <Text style={styles.logoutText}>Logout</Text>
             </LinearGradient>
           </TouchableOpacity>
 
           {/* App Version */}
-          <Text style={styles.versionText}>FitFormal v1.0.0</Text>
+          {/* <Text style={styles.versionText}>FitFormal v1.0.0</Text> */}
         </View>
       </ScrollView>
     </View>
@@ -603,9 +598,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  editAvatarText: {
-    fontSize: 16,
-    color: Colors.warmBrownColor,
+  editAvatarIcon: {
+    width: 18,
+    height: 18,
+    tintColor: Colors.whiteColor,
   },
   
   // User Info
@@ -631,6 +627,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.whiteColor,
     fontFamily: GILROY_MEDIUM,
+  },
+  userEmail: {
+    marginTop: 6,
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontFamily: GILROY_REGULAR,
   },
   
   // Content
@@ -662,6 +664,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderMedium,
     borderRadius: 16,
+  },
+  statIconImage: {
+    width: 22,
+    height: 22,
+    marginBottom: 6,
+    tintColor: Colors.warmBrownColor,
   },
   statNumber: {
     fontSize: 24,
@@ -701,14 +709,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  cardIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.lightGrey,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cardIcon: {
     fontSize: 24,
+  },
+  cardIconImage: {
+    width: 22,
+    height: 22,
+    tintColor: Colors.warmBrownColor,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: Colors.textPrimary,
     fontFamily: GILROY_BOLD,
+  },
+  cardSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: GILROY_REGULAR,
+    marginTop: 2,
   },
   editButton: {
     paddingHorizontal: 14,
@@ -778,8 +805,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionIcon: {
-    fontSize: 20,
+  actionIconImage: {
+    width: 22,
+    height: 22,
+    tintColor: Colors.warmBrownColor,
   },
   actionItemText: {
     fontSize: 16,
@@ -802,16 +831,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
+    height: 50,
   },
   logoutGradient: {
     flexDirection: 'row',
+    gap: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    gap: 10,
+    flex: 1,
   },
-  logoutIcon: {
-    fontSize: 20,
+  logoutIconImage: {
+    width: 20,
+    height: 20,
+    tintColor: '#DC2626',
   },
   logoutText: {
     fontSize: 17,

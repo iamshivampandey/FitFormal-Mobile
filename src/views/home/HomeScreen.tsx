@@ -8,15 +8,15 @@ import {
   Image,
   Dimensions,
   FlatList,
-  SafeAreaView,
   TextInput,
   Platform,
   ImageSourcePropType,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { strings } from '../../utils/string/strings';
 import { productImages } from '../../utils/images';
+import * as Images from '../../utils/images';
 import CustomButton from '../../components/CustomButton';
 
 const { width } = Dimensions.get('window');
@@ -190,7 +190,7 @@ const HomeScreen: React.FC = () => {
               <Text style={styles.userName}>Fit Formal</Text>
             </View>
             <TouchableOpacity style={styles.profileButton}>
-              <Text style={styles.profileIcon}>👤</Text>
+              <Image source={Images.person_icon} style={styles.profileIconImage} />
             </TouchableOpacity>
           </View>
 
@@ -204,7 +204,7 @@ const HomeScreen: React.FC = () => {
               onChangeText={setSearchQuery}
             />
             <TouchableOpacity style={styles.searchButton}>
-              <Text style={styles.searchIcon}>🔍</Text>
+              <Image source={Images.search_icon} style={styles.searchIconImage} />
             </TouchableOpacity>
           </View>
         </View>
@@ -252,11 +252,11 @@ const HomeScreen: React.FC = () => {
               <Text style={styles.quickActionText}>Book Measurement</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>✂️</Text>
+              <Image source={Images.scissor_icon} style={styles.quickActionIconImage} />
               <Text style={styles.quickActionText}>Find Tailor</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>📦</Text>
+              <Image source={Images.shopping_cart_icon} style={styles.quickActionIconImage} />
               <Text style={styles.quickActionText}>Track Orders</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionItem}>
@@ -308,6 +308,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: Colors.whiteColor,
   },
+  profileIconImage: {
+    width: 22,
+    height: 22,
+    tintColor: Colors.whiteColor,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -326,8 +331,10 @@ const styles = StyleSheet.create({
   searchButton: {
     padding: 10,
   },
-  searchIcon: {
-    fontSize: 18,
+  searchIconImage: {
+    width: 18,
+    height: 18,
+    tintColor: Colors.grey,
   },
   banner: {
     marginHorizontal: 20,
@@ -513,6 +520,12 @@ const styles = StyleSheet.create({
   quickActionIcon: {
     fontSize: 24,
     marginBottom: 8,
+  },
+  quickActionIconImage: {
+    width: 24,
+    height: 24,
+    marginBottom: 8,
+    tintColor: Colors.warmBrownColor,
   },
   quickActionText: {
     fontSize: 12,

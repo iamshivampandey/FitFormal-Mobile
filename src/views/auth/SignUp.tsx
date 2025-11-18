@@ -1,5 +1,4 @@
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,6 +7,7 @@ import {
   Alert,
 } from "react-native";
 import React, { useState } from "react";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from "../../utils/colors";
 import { palceholders, strings } from "../../utils/string/strings";
 import en from "../../utils/string/en";

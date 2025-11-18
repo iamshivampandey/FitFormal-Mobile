@@ -7,14 +7,13 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
-  SafeAreaView,
   Platform,
   ImageSourcePropType,
   FlatList,
   Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import CustomButton from '../../components/CustomButton';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';

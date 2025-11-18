@@ -5,12 +5,13 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
   Dimensions,
+  Image,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
+import * as Images from '../../utils/images';
 
 const { width } = Dimensions.get('window');
 
@@ -194,7 +195,7 @@ const TailorDashboard: React.FC = () => {
             <Text style={styles.statLabel}>Today's Appointments</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statIcon}>✂️</Text>
+            <Image source={Images.scissor_icon} style={styles.statIconImage} />
             <Text style={styles.statValue}>{todayStats.activeOrders}</Text>
             <Text style={styles.statLabel}>Active Orders</Text>
           </View>
@@ -202,7 +203,7 @@ const TailorDashboard: React.FC = () => {
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Text style={styles.statIcon}>💰</Text>
+            <Image source={Images.revenue_icon} style={styles.statIconImage} />
             <Text style={styles.statValue}>{todayStats.earnings}</Text>
             <Text style={styles.statLabel}>Today's Earnings</Text>
           </View>
@@ -295,15 +296,15 @@ const TailorDashboard: React.FC = () => {
               <Text style={styles.quickActionText}>My Schedule</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>💰</Text>
+              <Image source={Images.revenue_icon} style={styles.quickActionIconImage} />
               <Text style={styles.quickActionText}>Earnings</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>⚙️</Text>
+              <Image source={Images.gear_icon} style={styles.quickActionIconImage} />
               <Text style={styles.quickActionText}>Settings</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>📊</Text>
+              <Image source={Images.dashboard_icon} style={styles.quickActionIconImage} />
               <Text style={styles.quickActionText}>Analytics</Text>
             </TouchableOpacity>
           </View>
@@ -384,6 +385,12 @@ const styles = StyleSheet.create({
   statIcon: {
     fontSize: 32,
     marginBottom: 10,
+  },
+  statIconImage: {
+    width: 32,
+    height: 32,
+    marginBottom: 10,
+    tintColor: Colors.warmBrownColor,
   },
   statValue: {
     fontSize: 24,
@@ -635,6 +642,12 @@ const styles = StyleSheet.create({
   quickActionIcon: {
     fontSize: 24,
     marginBottom: 8,
+  },
+  quickActionIconImage: {
+    width: 24,
+    height: 24,
+    marginBottom: 8,
+    tintColor: Colors.warmBrownColor,
   },
   quickActionText: {
     fontSize: 12,

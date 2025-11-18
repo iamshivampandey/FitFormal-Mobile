@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   Dimensions,
   FlatList,
-  SafeAreaView,
   TextInput,
   Platform,
+  Image,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../utils/colors';
+import * as Images from '../../utils/images';
 
 const { width } = Dimensions.get('window');
 
@@ -44,7 +46,8 @@ interface Stats {
 const ShopHomeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const insets = useSafeAreaInsets();
-  
+  const navigation = useNavigation<any>();
+
   // Calculate tab bar height to add bottom padding
   const tabBarHeight = Platform.OS === 'ios' ? 65 + insets.bottom : 70;
 
@@ -132,9 +135,9 @@ const ShopHomeScreen: React.FC = () => {
     }
   };
 
-  const renderStatCard = (title: string, value: string | number, icon: string, color: string) => (
+  const renderStatCard = (title: string, value: string | number, icon: any, color: string) => (
     <View style={[styles.statCard, { borderLeftColor: color }]}>
-      <Text style={styles.statIcon}>{icon}</Text>
+      <Image source={icon} style={styles.statIconImage} />
       <View style={styles.statInfo}>
         <Text style={styles.statValue}>{value}</Text>
         <Text style={styles.statTitle}>{title}</Text>
@@ -183,6 +186,33 @@ const ShopHomeScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const openAddProduct = () => {
+    const parentNavigator = navigation.getParent();
+
+    if (parentNavigator) {
+      // Navigate to Products tab and open AddEditProduct screen
+      parentNavigator.navigate('Products' as never, {
+        screen: 'AddEditProduct',
+        params: { mode: 'add' },
+      } as never);
+    } else {
+      // Fallback in case parent navigator is not available
+      navigation.navigate('AddEditProduct' as never);
+    }
+  };
+
+  const openOrdersTab = () => {
+    const parentNavigator = navigation.getParent();
+
+    if (parentNavigator) {
+      parentNavigator.navigate('Orders' as never);
+    }
+  };
+
+  const openAnalytics = () => {
+    navigation.navigate('Analytics' as never);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView 
@@ -193,11 +223,11 @@ const ShopHomeScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.greeting}>Welcome Back! 🏬</Text>
-              <Text style={styles.shopName}>Your Shop</Text>
+              {/* <Text style={styles.greeting}>Welcome Back!</Text> */}
+              <Text style={styles.shopName}>Fit Formal</Text>
             </View>
             <TouchableOpacity style={styles.profileButton}>
-              <Text style={styles.profileIcon}>👤</Text>
+              <Image source={Images.person_icon} style={styles.profileIconImage} />
             </TouchableOpacity>
           </View>
 
@@ -211,7 +241,7 @@ const ShopHomeScreen: React.FC = () => {
               onChangeText={setSearchQuery}
             />
             <TouchableOpacity style={styles.searchButton}>
-              <Text style={styles.searchIcon}>🔍</Text>
+              <Image source={Images.search_icon} style={styles.searchIconImage} />
             </TouchableOpacity>
           </View>
         </View>
@@ -220,35 +250,32 @@ const ShopHomeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Overview</Text>
           <View style={styles.statsGrid}>
-            {renderStatCard('Products', stats.totalProducts, '📦', Colors.warmBrownColor)}
-            {renderStatCard('Active Orders', stats.activeOrders, '🛒', '#2196F3')}
-            {renderStatCard('Revenue', stats.totalRevenue, '💰', '#4CAF50')}
-            {renderStatCard('Low Stock', stats.lowStock, '⚠️', '#FF9800')}
+            {renderStatCard('Products', stats.totalProducts, Images.shopping_bag, Colors.warmBrownColor)}
+            {renderStatCard('Active Orders', stats.activeOrders, Images.shopping_cart_icon, '#2196F3')}
+            {renderStatCard('Revenue', stats.totalRevenue, Images.revenue_icon, '#4CAF50')}
+            {renderStatCard('Low Stock', stats.lowStock, Images.security_icon, '#FF9800')}
           </View>
         </View>
 
         {/* Quick Actions */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>➕</Text>
+            <TouchableOpacity style={styles.quickActionItem} onPress={openAddProduct}>
+              <Image source={Images.add_icon} style={styles.quickActionIconImage} />
               <Text style={styles.quickActionText}>Add Product</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>📋</Text>
+            <TouchableOpacity style={styles.quickActionItem} onPress={openOrdersTab}>
+              <Image source={Images.shopping_cart_icon} style={styles.quickActionIconImage} />
               <Text style={styles.quickActionText}>View Orders</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>📊</Text>
+            
+            <TouchableOpacity style={styles.quickActionItem} onPress={openAnalytics}>
+              <Image source={Images.dashboard_icon} style={styles.quickActionIconImage} />
               <Text style={styles.quickActionText}>Analytics</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionItem}>
-              <Text style={styles.quickActionIcon}>⚙️</Text>
-              <Text style={styles.quickActionText}>Settings</Text>
-            </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
         {/* Recent Products */}
         <View style={styles.section}>
@@ -272,7 +299,7 @@ const ShopHomeScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Orders</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={openOrdersTab}>
               <Text style={styles.seeAllText}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -283,7 +310,7 @@ const ShopHomeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Business Insights</Text>
           <View style={styles.insightCard}>
-            <Text style={styles.insightIcon}>📈</Text>
+            <Image source={Images.dashboard_icon} style={styles.insightIconImage} />
             <View style={styles.insightContent}>
               <Text style={styles.insightTitle}>Sales Trending Up</Text>
               <Text style={styles.insightText}>
@@ -292,7 +319,7 @@ const ShopHomeScreen: React.FC = () => {
             </View>
           </View>
           <View style={styles.insightCard}>
-            <Text style={styles.insightIcon}>🎯</Text>
+            <Image source={Images.shopping_bag} style={styles.insightIconImage} />
             <View style={styles.insightContent}>
               <Text style={styles.insightTitle}>Popular Category</Text>
               <Text style={styles.insightText}>
@@ -344,6 +371,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: Colors.whiteColor,
   },
+  profileIconImage: {
+    width: 22,
+    height: 22,
+    tintColor: Colors.whiteColor,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -364,6 +396,11 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     fontSize: 18,
+  },
+  searchIconImage: {
+    width: 18,
+    height: 18,
+    tintColor: Colors.grey,
   },
   section: {
     marginBottom: 30,
@@ -404,9 +441,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  statIcon: {
-    fontSize: 32,
+  statIconImage: {
+    width: 28,
+    height: 28,
     marginRight: 12,
+    tintColor: Colors.warmBrownColor,
   },
   statInfo: {
     flex: 1,
@@ -423,28 +462,37 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
+    rowGap: 12,
   },
   quickActionItem: {
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.inputBackground,
-    paddingVertical: 20,
-    paddingHorizontal: 15,
-    borderRadius: 15,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.inputBorderColor,
-    minWidth: 80,
+    minWidth: 0,
+    flexBasis: '30%',
   },
   quickActionIcon: {
     fontSize: 24,
-    marginBottom: 8,
+  },
+  quickActionIconImage: {
+    width: 22,
+    height: 22,
+    marginRight: 8,
+    tintColor: Colors.warmBrownColor,
   },
   quickActionText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.textPrimary,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   productsList: {
     paddingHorizontal: 15,
@@ -562,9 +610,11 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: Colors.warmBrownColor,
   },
-  insightIcon: {
-    fontSize: 32,
+  insightIconImage: {
+    width: 32,
+    height: 32,
     marginRight: 15,
+    tintColor: Colors.warmBrownColor,
   },
   insightContent: {
     flex: 1,

@@ -7,11 +7,10 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
-  SafeAreaView,
   TextInput,
   Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { useNavigation } from '@react-navigation/native';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR } from '../../utils/fonts';

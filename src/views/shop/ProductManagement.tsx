@@ -5,16 +5,16 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
   Image,
   Alert,
   Switch,
   TextInput,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { productImages } from '../../utils/images';
+import * as Images from '../../utils/images';
 
 interface Product {
   id: string;
@@ -204,14 +204,17 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
             style={styles.editButton}
             onPress={() => handleEditProduct(product)}
           >
-            <Text style={styles.editButtonText}>✏️ Edit</Text>
+            <View style={styles.actionButtonContent}>
+              <Image source={Images.edit_icon} style={styles.actionIconImage} />
+              <Text style={styles.editButtonText}>Edit</Text>
+            </View>
           </TouchableOpacity>
           
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={() => handleDeleteProduct(product.id, product.name)}
           >
-            <Text style={styles.deleteButtonText}>🗑️ Delete</Text>
+            <Text style={styles.deleteButtonText}>Delete</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -230,7 +233,7 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Image source={Images.search_icon} style={styles.searchIconImage} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search products..."
@@ -298,7 +301,7 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
           filteredProducts.map(renderProduct)
         ) : (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateIcon}>📦</Text>
+            <Image source={Images.shopping_bag} style={styles.emptyStateIconImage} />
             <Text style={styles.emptyStateText}>No products found</Text>
             <Text style={styles.emptyStateSubtext}>
               Try adjusting your search or filters
@@ -309,7 +312,7 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       {/* Floating Add Button */}
       <TouchableOpacity style={styles.fab} onPress={handleAddProduct}>
-        <Text style={styles.fabIcon}>+</Text>
+        <Image source={Images.add_icon} style={styles.fabIconImage} />
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -365,9 +368,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.inputBorderColor,
   },
-  searchIcon: {
-    fontSize: 18,
+  searchIconImage: {
+    width: 18,
+    height: 18,
     marginRight: 10,
+    tintColor: Colors.grey,
   },
   searchInput: {
     flex: 1,
@@ -538,6 +543,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.warmBrownColor,
   },
+  actionButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  actionIconImage: {
+    width: 16,
+    height: 16,
+    tintColor: Colors.warmBrownColor,
+  },
   editButtonText: {
     fontSize: 13,
     fontWeight: '600',
@@ -562,9 +578,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 60,
   },
-  emptyStateIcon: {
-    fontSize: 64,
+  emptyStateIconImage: {
+    width: 64,
+    height: 64,
     marginBottom: 16,
+    tintColor: Colors.warmBrownColor,
   },
   emptyStateText: {
     fontSize: 18,
@@ -592,10 +610,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  fabIcon: {
-    fontSize: 32,
-    color: Colors.whiteColor,
-    fontWeight: '300',
+  fabIconImage: {
+    width: 28,
+    height: 28,
+    tintColor: Colors.whiteColor,
   },
 });
 

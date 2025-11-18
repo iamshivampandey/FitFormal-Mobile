@@ -17,6 +17,19 @@ export const gear_icon = require('./images/gear_icon.png');
 export const search_icon = require('./images/search_icon.png');
 export const shopping_bag = require('./images/shopping_bag.png');
 export const google_icon = require('./images/icons_google.png');
+export const person_icon = require('./images/person.png');
+export const user_icon = require('./images/user.png');
+export const revenue_icon = require('./images/revenue.png');
+export const home_icon = require('./images/home.png');
+export const shopping_cart_icon = require('./images/shopping_cart.png');
+export const add_icon = require('./images/add_icon.png');
+export const camera_icon = require('./images/camera_icon.png');
+export const unlock_icon = require('./images/unlock_icon.png');
+export const security_icon = require('./images/security_icon.png');
+export const logout_icon = require('./images/logout_icon.png');
+export const about_icon = require('./images/about_icon.png');
+export const support_icon = require('./images/support_icon.png');
+export const edit_icon = require('./images/edit_icon.png');
 
 // Tab bar specific icons
 export const scissor_icon = require('./images/scissor_icon.png');

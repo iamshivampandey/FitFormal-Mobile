@@ -9,16 +9,21 @@
  * For iOS Simulator, use localhost or your computer's IP address
  */
 
+import { Platform } from 'react-native';
+
 const API_CONFIG = {
   // Base URL for your backend API
-  BASE_URL: 'http://localhost:5000',
+  BASE_URL:
+    Platform.OS === 'android'
+      ? 'http://10.0.2.2:5000' // Android emulator: forward to host machine
+      : 'http://localhost:5000',
   
   // Alternative URLs for different environments
   // Uncomment the one you need:
   
   // For Android Emulator:
   // BASE_URL: 'http://10.0.2.2:5000',
-  
+
   // For Physical Device (replace with your computer's IP):
   // BASE_URL: 'http://192.168.1.100:5000',
   

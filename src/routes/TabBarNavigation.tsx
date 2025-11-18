@@ -9,6 +9,7 @@ import HomeStackNavigation from './HomeStackNavigation';
 import ProfileStackNavigation from './ProfileStackNavigation';
 import CartStackNavigation from './CartStackNavigation';
 import ShopStackNavigation from './ShopStackNavigation';
+import OrdersStackNavigation from './OrdersStackNavigation';
 
 export default function TabBarNavigation(): React.JSX.Element {
   const TabBar = createBottomTabNavigator();
@@ -127,7 +128,7 @@ export default function TabBarNavigation(): React.JSX.Element {
         />
         <TabBar.Screen
           name="Orders"
-          component={CartStackNavigation}
+          component={OrdersStackNavigation}
           options={{
             tabBarLabel: 'Orders',
             tabBarIcon: ({ focused, size }) => (
@@ -176,7 +177,7 @@ export default function TabBarNavigation(): React.JSX.Element {
         />
         <TabBar.Screen
           name="Bookings"
-          component={CartStackNavigation}
+          component={OrdersStackNavigation}
           options={{
             tabBarLabel: 'Bookings',
             tabBarIcon: ({ focused, size }) => (
@@ -190,7 +191,7 @@ export default function TabBarNavigation(): React.JSX.Element {
         />
         <TabBar.Screen
           name="Orders"
-          component={CartStackNavigation}
+          component={OrdersStackNavigation}
           options={{
             tabBarLabel: 'Orders',
             tabBarIcon: ({ focused, size }) => (
@@ -253,7 +254,7 @@ export default function TabBarNavigation(): React.JSX.Element {
         />
         <TabBar.Screen
           name="Tailoring"
-          component={CartStackNavigation}
+          component={OrdersStackNavigation}
           options={{
             tabBarLabel: 'Tailoring',
             tabBarIcon: ({ focused, size }) => (
@@ -304,10 +305,10 @@ export default function TabBarNavigation(): React.JSX.Element {
         options={{
           tabBarIcon: ({ focused, size }) => (
             <Icon
-            name={focused ? 'person' : 'person-outline'}
-            size={size}
-            color={focused ? Colors.warmBrownColor : Colors.grey}
-          />
+              name={focused ? 'cart' : 'cart-outline'}
+              size={size}
+              color={focused ? Colors.warmBrownColor : Colors.grey}
+            />
           ),
         }}
       />

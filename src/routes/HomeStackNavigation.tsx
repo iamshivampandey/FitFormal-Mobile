@@ -4,6 +4,7 @@ import Home from '../views/home'; // This handles role-based routing
 import BookMeasurementScreen from '../views/home/BookMeasurementScreen';
 import ProductDetailScreen from '../views/home/ProductDetailScreen';
 import ProductsListScreen from '../views/home/ProductsListScreen';
+import AnalyticsScreen from '../views/home/AnalyticsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,6 +15,7 @@ export default function HomeStackNavigation(): React.JSX.Element {
       <Stack.Screen name="BookMeasurement" component={BookMeasurementScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <Stack.Screen name="ProductsList" component={ProductsListScreen} />
+      <Stack.Screen name="Analytics" component={AnalyticsScreen} />
     </Stack.Navigator>
   );
 }
