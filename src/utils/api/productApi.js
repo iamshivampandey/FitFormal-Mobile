@@ -7,7 +7,7 @@ import API_CONFIG from "./config";
  * @returns {Promise} Axios response
  */
 export const createProduct = async (productData) => {
-  const endpoint = API_CONFIG.ENDPOINTS.CREATE_PRODUCT || "/api/products";
+  const endpoint = API_CONFIG.ENDPOINTS.CREATE_PRODUCT;
   return AxiosConfig.post(endpoint, productData);
 };
 
@@ -18,9 +18,58 @@ export const createProduct = async (productData) => {
  * @returns {Promise} Axios response
  */
 export const updateProduct = async (productId, productData) => {
-  const baseEndpoint = API_CONFIG.ENDPOINTS.UPDATE_PRODUCT || "/api/products/:id";
+  const baseEndpoint = API_CONFIG.ENDPOINTS.UPDATE_PRODUCT;
   const endpoint = baseEndpoint.replace(":id", String(productId));
   return AxiosConfig.put(endpoint, productData);
 };
+
+/**
+ * Fetch products list
+ * @param {Object} params - Optional query params (pagination, filters)
+ * @returns {Promise} Axios response
+ */
+export const getProducts = async (params = {}) => {
+  const endpoint = API_CONFIG.ENDPOINTS.GET_PRODUCTS;
+  return AxiosConfig.get(endpoint, { params });
+};
+
+/**
+ * Get single product by id
+ * @param {string|number} productId
+ * @returns {Promise} Axios response
+ */
+export const getProductById = async (productId) => {
+  const baseEndpoint = API_CONFIG.ENDPOINTS.GET_PRODUCT;
+  const endpoint = baseEndpoint.replace(":id", String(productId));
+  return AxiosConfig.get(endpoint);
+};
+
+/**
+ * Fetch all brands for dropdowns
+ * @returns {Promise} Axios response
+ */
+export const getAllBrands = async () => {
+  const endpoint = API_CONFIG.ENDPOINTS.GET_ALL_BRANDS;
+  return AxiosConfig.get(endpoint);
+};
+
+/**
+ * Fetch all categories for dropdowns
+ * @returns {Promise} Axios response
+ */
+export const getAllCategories = async () => {
+  const endpoint = API_CONFIG.ENDPOINTS.GET_ALL_CATEGORIES;
+  return AxiosConfig.get(endpoint);
+};
+
+/**
+ * Fetch all product types for dropdowns
+ * @returns {Promise} Axios response
+ */
+export const getAllProductTypes = async () => {
+  const endpoint = API_CONFIG.ENDPOINTS.GET_ALL_PRODUCT_TYPES;
+  return AxiosConfig.get(endpoint);
+};
+
 
 

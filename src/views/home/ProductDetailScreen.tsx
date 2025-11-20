@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,15 @@ import {
   ImageSourcePropType,
   FlatList,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import CustomButton from '../../components/CustomButton';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
+import { getProductById } from '../../utils/api/productApi';
+import { productImages as tempProductImages } from '../../utils/images';
 
 const { width } = Dimensions.get('window');
 
@@ -31,12 +34,12 @@ interface Review {
 
 interface ProductDetailScreenProps {
   id: string;
-  name: string;
-  price: string;
+  name?: string;
+  price?: string;
   originalPrice?: string;
-  image: ImageSourcePropType;
-  rating: number;
-  shopName: string;
+  image?: ImageSourcePropType;
+  rating?: number;
+  shopName?: string;
   isNew?: boolean;
   isSale?: boolean;
 }
@@ -55,18 +58,91 @@ interface RecommendedProduct {
 
 const ProductDetailScreen: React.FC = () => {
   const navigation = useNavigation();
-  const route = useRoute();
+  const route = useRoute<any>();
   const insets = useSafeAreaInsets();
   
-  const product = route.params as ProductDetailScreenProps;
+  const routeParams = route.params as ProductDetailScreenProps;
+  const productId = routeParams.id;
+  
+  const [backendProduct, setBackendProduct] = useState<any | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Mock data for demonstration
-  const productImages = [product.image, product.image, product.image];
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await getProductById(productId);
+        const raw =
+          response?.data?.data?.product ||
+          response?.data?.product ||
+          response?.data;
+
+        if (isMounted) {
+          setBackendProduct(raw);
+        }
+      } catch (e: any) {
+        console.error('Failed to load product detail:', e?.response?.data || e?.message || e);
+        if (isMounted) {
+          setError(
+            e?.response?.data?.message ||
+              e?.message ||
+              'Failed to load product details. Please try again.'
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProduct();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [productId]);
+
+  const detail = backendProduct || {};
+
+  const mainImage: ImageSourcePropType = useMemo(() => {
+    if (detail.primary_image?.url) {
+      return { uri: detail.primary_image.url };
+    }
+    if (routeParams.image) {
+      return routeParams.image;
+    }
+    return tempProductImages.shirt1;
+  }, [detail.primary_image, routeParams.image]);
+
+  // Image gallery
+  const productImages = useMemo(
+    () => [mainImage, mainImage, mainImage],
+    [mainImage],
+  );
+
+  const displayName =
+    detail.title || routeParams.name || 'Product';
+
+  const numericPrice =
+    detail.price?.price_sale ??
+    detail.price?.price_mrp ??
+    (routeParams.price ? parseFloat(routeParams.price.replace(/[^\d.]/g, '')) : 0);
+
+  const displayPrice = numericPrice ? `₹${numericPrice}` : routeParams.price || '—';
+
+  const brandName = detail.brand?.name || routeParams.shopName || 'Your Shop';
+  const categoryName = detail.category?.name;
   
   const sizes = ['1 Meter', '2 Meters', '3 Meters', '5 Meters'];
   
@@ -103,37 +179,68 @@ const ProductDetailScreen: React.FC = () => {
     },
   ];
 
-  const productDescription = `Premium quality formal fabric perfect for shirts, blazers, and trousers. Made from 100% premium cotton with excellent breathability and comfort. Perfect for all-day wear in any formal setting.
+  const productDescription = useMemo(() => {
+    if (detail.long_description) return detail.long_description;
+    if (detail.short_description) return detail.short_description;
+    return `Premium product from ${brandName}${
+      categoryName ? ` in ${categoryName}` : ''
+    }. Perfect for your formal and sportswear collection.`;
+  }, [detail.long_description, detail.short_description, brandName, categoryName]);
 
-Features:
-• Premium cotton blend
-• Breathable and comfortable
-• Easy to maintain
-• Color-fast and durable
-• Perfect for formal occasions
+  const specifications = useMemo(
+    () =>
+      [
+        detail.fabric && { label: 'Fabric', value: detail.fabric },
+        detail.fabric_purity && { label: 'Fabric Purity', value: detail.fabric_purity },
+        detail.composition && { label: 'Composition', value: `${detail.composition}%` },
+        detail.pattern && { label: 'Pattern', value: detail.pattern },
+        detail.color && { label: 'Primary Color', value: detail.color },
+        detail.brand_color && { label: 'Brand Color', value: detail.brand_color },
+        detail.stitching_type && { label: 'Stitching', value: detail.stitching_type },
+        detail.ideal_for && { label: 'Ideal For', value: detail.ideal_for },
+        detail.unit && { label: 'Unit', value: detail.unit },
+        detail.top_length_value &&
+          detail.top_length_unit && {
+            label: 'Length',
+            value: `${detail.top_length_value} ${detail.top_length_unit}`,
+          },
+        detail.compliance?.country_of_origin && {
+          label: 'Country of Origin',
+          value: detail.compliance.country_of_origin,
+        },
+        detail.compliance?.manufacturer_details && {
+          label: 'Manufacturer',
+          value: detail.compliance.manufacturer_details,
+        },
+        detail.compliance?.mfg_month_year && {
+          label: 'MFG Date',
+          value: detail.compliance.mfg_month_year,
+        },
+      ].filter(Boolean) as { label: string; value: string }[],
+    [detail],
+  );
 
-Care Instructions:
-• Dry clean recommended
-• Iron at medium temperature
-• Store in a cool, dry place`;
+  const uiProduct = useMemo(
+    () => ({
+      name: displayName,
+      price: displayPrice,
+      originalPrice: routeParams.originalPrice,
+      rating: routeParams.rating ?? 4.5,
+      isNew: routeParams.isNew ?? false,
+      isSale: routeParams.isSale ?? false,
+      shopName: brandName,
+    }),
+    [displayName, displayPrice, routeParams.originalPrice, routeParams.rating, routeParams.isNew, routeParams.isSale, brandName],
+  );
 
-  const specifications = [
-    { label: 'Material', value: 'Premium Cotton' },
-    { label: 'Weight', value: '150 GSM' },
-    { label: 'Width', value: '58 inches' },
-    { label: 'Pattern', value: 'Solid' },
-    { label: 'Care', value: 'Dry Clean' },
-    { label: 'Origin', value: 'India' },
-  ];
-
-  // Recommended products - similar items
+  // Recommended products - simple static suggestions (can be wired to API later)
   const recommendedProducts: RecommendedProduct[] = [
     {
       id: 'rec1',
       name: 'Premium Linen Shirt Fabric',
       price: '$29.99',
       originalPrice: '$39.99',
-      image: product.image,
+      image: mainImage,
       rating: 4.7,
       shopName: 'Elite Fabrics',
       isSale: true,
@@ -142,7 +249,7 @@ Care Instructions:
       id: 'rec2',
       name: 'Silk Blend Formal Fabric',
       price: '$64.99',
-      image: product.image,
+      image: mainImage,
       rating: 4.9,
       shopName: 'Royal Textiles',
       isNew: true,
@@ -151,7 +258,7 @@ Care Instructions:
       id: 'rec3',
       name: 'Classic Cotton Fabric',
       price: '$22.99',
-      image: product.image,
+      image: mainImage,
       rating: 4.6,
       shopName: 'Premium Cloth House',
     },
@@ -160,7 +267,7 @@ Care Instructions:
       name: 'Executive Business Fabric',
       price: '$42.99',
       originalPrice: '$52.99',
-      image: product.image,
+      image: mainImage,
       rating: 4.8,
       shopName: 'Elite Fabrics',
       isSale: true,
@@ -177,7 +284,7 @@ Care Instructions:
       return;
     }
     // Add to cart logic here
-    Alert.alert('Added to Cart', `Added ${quantity} ${selectedSize} of ${product.name} to cart`);
+    Alert.alert('Added to Cart', `Added ${quantity} ${selectedSize} of ${displayName} to cart`);
   };
 
   const renderImageThumbnail = ({ item, index }: { item: ImageSourcePropType; index: number }) => (
@@ -275,12 +382,12 @@ Care Instructions:
               style={styles.mainImage} 
               resizeMode="cover" 
             />
-            {product.isNew && (
+            {uiProduct.isNew && (
               <View style={styles.newBadge}>
                 <Text style={styles.badgeText}>NEW</Text>
               </View>
             )}
-            {product.isSale && (
+            {uiProduct.isSale && (
               <View style={styles.saleBadge}>
                 <Text style={styles.badgeText}>SALE</Text>
               </View>
@@ -303,16 +410,16 @@ Care Instructions:
           {/* Product Name & Price */}
           <View style={styles.productHeader}>
             <View style={styles.productTitleContainer}>
-              <Text style={styles.productName}>{product.name}</Text>
+              <Text style={styles.productName}>{uiProduct.name}</Text>
               <View style={styles.ratingContainer}>
-                <Text style={styles.rating}>⭐ {product.rating}</Text>
+                <Text style={styles.rating}>⭐ {uiProduct.rating}</Text>
                 <Text style={styles.reviewCount}>({reviews.length} reviews)</Text>
               </View>
             </View>
             <View style={styles.priceContainer}>
-              <Text style={styles.productPrice}>{product.price}</Text>
-              {product.originalPrice && (
-                <Text style={styles.originalPrice}>{product.originalPrice}</Text>
+              <Text style={styles.productPrice}>{uiProduct.price}</Text>
+              {uiProduct.originalPrice && (
+                <Text style={styles.originalPrice}>{uiProduct.originalPrice}</Text>
               )}
             </View>
           </View>
@@ -323,7 +430,7 @@ Care Instructions:
               <Text style={styles.shopIconText}>🏪</Text>
             </View>
             <View style={styles.shopInfo}>
-              <Text style={styles.shopName}>{product.shopName}</Text>
+              <Text style={styles.shopName}>{uiProduct.shopName}</Text>
               <Text style={styles.shopDetails}>⭐ 4.8 • 0.8 km away</Text>
             </View>
             <TouchableOpacity style={styles.visitShopButton}>
@@ -481,7 +588,7 @@ Care Instructions:
         <View style={styles.totalPriceContainer}>
           <Text style={styles.totalPriceLabel}>Total Price</Text>
           <Text style={styles.totalPrice}>
-            ${(parseFloat(product.price.replace('$', '')) * quantity).toFixed(2)}
+            {numericPrice ? `₹${(numericPrice * quantity).toFixed(2)}` : uiProduct.price}
           </Text>
         </View>
         <CustomButton

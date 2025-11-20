@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,12 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../utils/colors';
 import { productImages } from '../../utils/images';
 import * as Images from '../../utils/images';
+import { getProducts } from '../../utils/api/productApi';
+import StorageService from '../../services/storage.service';
 
 interface Product {
   id: string;
@@ -24,6 +27,7 @@ interface Product {
   stock: number;
   isAvailable: boolean;
   image: any;
+  raw?: any; // full backend product payload for editing
 }
 
 const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -31,82 +35,112 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
   const tabBarHeight = Platform.OS === 'ios' ? 65 + insets.bottom : 70;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-
-  // Mock products data
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: '1',
-      name: 'Premium Cotton Shirt Fabric',
-      price: '24.99',
-      category: 'Shirt Fabric',
-      stock: 45,
-      isAvailable: true,
-      image: productImages.shirt1,
-    },
-    {
-      id: '2',
-      name: 'Wool Blend Blazer Fabric',
-      price: '89.99',
-      category: 'Blazer Fabric',
-      stock: 12,
-      isAvailable: true,
-      image: productImages.shirt2,
-    },
-    {
-      id: '3',
-      name: 'Formal Trouser Fabric',
-      price: '34.99',
-      category: 'Trouser Fabric',
-      stock: 0,
-      isAvailable: false,
-      image: productImages.shirt3,
-    },
-    {
-      id: '4',
-      name: 'Complete Suit Set',
-      price: '149.99',
-      category: 'Suit Set',
-      stock: 28,
-      isAvailable: true,
-      image: productImages.shirt4,
-    },
-    {
-      id: '5',
-      name: 'Luxury Formal Shirt Fabric',
-      price: '54.99',
-      category: 'Shirt Fabric',
-      stock: 35,
-      isAvailable: true,
-      image: productImages.shirt5,
-    },
-    {
-      id: '6',
-      name: 'Classic Business Fabric',
-      price: '39.99',
-      category: 'Shirt Fabric',
-      stock: 22,
-      isAvailable: true,
-      image: productImages.shirt6,
-    },
-    {
-      id: '7',
-      name: 'Executive Formal Fabric',
-      price: '44.99',
-      category: 'Blazer Fabric',
-      stock: 18,
-      isAvailable: true,
-      image: productImages.shirt7,
-    },
-  ]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const categories = [
     'all',
-    'Shirt Fabric',
-    'Trouser Fabric',
-    'Blazer Fabric',
-    'Suit Set',
+    'Shoes',
+    'Clothing',
     'Accessories',
+    'Sports Equipment',
+    'Fitness Gear',
   ];
+
+  const categoryNamesById: { [key: number]: string } = {
+    1: 'Shoes',
+    2: 'Clothing',
+    3: 'Accessories',
+    4: 'Sports Equipment',
+    5: 'Fitness Gear',
+  };
+
+  const loadProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setLoadError(null);
+
+      // Get logged-in user id to filter products
+      let userId: number | null = null;
+      try {
+        const storedUser = await StorageService.getUser();
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          const rawUser = parsed.user || parsed;
+          if (rawUser?.id) {
+            userId = Number(rawUser.id);
+          }
+        }
+      } catch (e) {
+        console.warn('Unable to parse stored user for user_id in ProductManagement', e);
+      }
+
+      if (!userId) {
+        setLoadError('Unable to determine logged-in user. Please sign in again.');
+        setProducts([]);
+        return;
+      }
+
+      const response = await getProducts({ user_id: userId });
+
+      const raw = response?.data?.data.products || [];
+      console.log('Loaded products:', JSON.stringify(raw));
+
+      const mapped: Product[] = raw.map((item: any, index: number) => {
+        const id = item.id ?? index;
+
+        const categoryName =
+          item.category?.name ||
+          categoryNamesById[Number(item.category?.id)] ||
+          'Uncategorized';
+
+        const priceNode = item.price || {};
+        const priceNumber =
+          priceNode.price_sale ??
+          priceNode.price_mrp ??
+          0;
+
+        // Backend response snippet does not include stock quantity yet,
+        // so default to 0 to keep UI stable.
+        const stockQty = item.stock_qty ?? 0;
+
+        const primaryImage = item.primary_image;
+        const imageSource =
+          primaryImage?.url
+            ? { uri: primaryImage.url }
+            : productImages.shirt1;
+
+        return {
+          id: String(id),
+          name: item.title || item.model_name || 'Untitled product',
+          price: priceNumber.toString(),
+          category: categoryName,
+          stock: Number(stockQty),
+          isAvailable: item.is_active ?? true,
+          image: imageSource,
+          raw: item,
+        };
+      });
+
+      setProducts(mapped);
+    } catch (error: any) {
+      console.error('Failed to load products:', error?.response?.data || error?.message || error);
+      setLoadError(
+        error?.response?.data?.message ||
+          error?.message ||
+          'Failed to load products. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProducts();
+    }, [loadProducts])
+  );
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -148,7 +182,8 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const handleEditProduct = (product: Product) => {
-    navigation.navigate('AddEditProduct', { product, mode: 'edit' });
+    // Pass full backend product payload if available so AddEditProduct can prefill all fields
+    navigation.navigate('AddEditProduct', { product: product.raw ?? product, mode: 'edit' });
   };
 
   const handleAddProduct = () => {
@@ -156,9 +191,26 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const renderProduct = (product: Product) => (
-    <View key={product.id} style={styles.productCard}>
+    <TouchableOpacity
+      key={product.id}
+      style={styles.productCard}
+      activeOpacity={0.85}
+      onPress={() =>
+        navigation.navigate('ProductDetail', {
+          id: product.id,
+          name: product.name,
+          price: `₹${product.price}`,
+          originalPrice: undefined,
+          image: product.image,
+          rating: 4.5,
+          shopName: product.raw?.brand?.name || 'Your Shop',
+          isNew: false,
+          isSale: false,
+        })
+      }
+    >
       <Image source={product.image} style={styles.productImage} resizeMode="cover" />
-      
+
       <View style={styles.productDetails}>
         <View style={styles.productHeader}>
           <View style={styles.productInfo}>
@@ -218,7 +270,7 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

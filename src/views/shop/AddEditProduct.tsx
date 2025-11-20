@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,14 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { Colors } from '../../utils/colors';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
 import CustomButton from '../../components/CustomButton';
+import {
+  createProduct,
+  updateProduct,
+  getAllBrands,
+  getAllCategories,
+  getAllProductTypes,
+} from '../../utils/api/productApi';
+import StorageService from '../../services/storage.service';
 
 interface ProductImage {
   id: string;
@@ -33,29 +41,26 @@ interface AddEditProductProps {
 }
 
 const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) => {
+  console.log(JSON.stringify(route.params));
   const { product, mode } = route?.params || { mode: 'add' };
   
-  // Data Options (should come from API in production)
-  const brands = [
-    { id: 1, name: 'Raymond' },
-    { id: 2, name: 'Arrow' },
-    { id: 3, name: 'Park Avenue' },
-    { id: 4, name: 'Allen Solly' },
-    { id: 5, name: 'Van Heusen' },
-  ];
-
-  const categories = [
-    { id: 1, name: 'Shirt Fabric' },
-    { id: 2, name: 'Suiting' },
-    { id: 3, name: 'Trouser Fabric' },
-    { id: 4, name: 'Formal Wear' },
-    { id: 5, name: 'Casual Wear' },
-  ];
+  // Data options loaded from backend
+  const [brandOptions, setBrandOptions] = useState<{ id: number | string; name: string }[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<{ id: number | string; name: string }[]>([]);
+  const [productTypeOptions, setProductTypeOptions] = useState<{ id: number | string; name: string }[]>([]);
   
-  // Form State - ALL FIELDS from web
+  // Form State - ALL FIELDS from web / backend
   const [title, setTitle] = useState(product?.title || '');
-  const [brandId, setBrandId] = useState(product?.brand_id || '');
-  const [categoryId, setCategoryId] = useState(product?.category_id || '');
+  const [brandId, setBrandId] = useState(
+    product?.brand_id ||
+    product?.brand?.id ||
+    ''
+  );
+  const [categoryId, setCategoryId] = useState(
+    product?.category_id ||
+    product?.category?.id ||
+    ''
+  );
   const [sku, setSku] = useState(product?.sku || '');
   const [styleCode, setStyleCode] = useState(product?.style_code || '');
   const [modelName, setModelName] = useState(product?.model_name || '');
@@ -79,24 +84,93 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
   const [unit, setUnit] = useState(product?.unit || 'meter');
   
   // Pricing
-  const [currencyCode, setCurrencyCode] = useState(product?.currency_code || 'INR');
-  const [priceMRP, setPriceMRP] = useState(product?.price_mrp || '');
-  const [priceSale, setPriceSale] = useState(product?.price_sale || '');
+  const [currencyCode, setCurrencyCode] = useState(
+    product?.currency_code ||
+    product?.price?.currency_code ||
+    'INR'
+  );
+  const [priceMRP, setPriceMRP] = useState(
+    product?.price_mrp ||
+    (product?.price?.price_mrp != null ? String(product.price.price_mrp) : '')
+  );
+  const [priceSale, setPriceSale] = useState(
+    product?.price_sale ||
+    (product?.price?.price_sale != null ? String(product.price.price_sale) : '')
+  );
   
   // Inventory
   const [stockQty, setStockQty] = useState(product?.stock_qty || '');
   
   // Compliance
-  const [countryOfOrigin, setCountryOfOrigin] = useState(product?.country_of_origin || '');
-  const [manufacturerDetails, setManufacturerDetails] = useState(product?.manufacturer_details || '');
-  const [packerDetails, setPackerDetails] = useState(product?.packer_details || '');
-  const [importerDetails, setImporterDetails] = useState(product?.importer_details || '');
-  const [mfgMonthYear, setMfgMonthYear] = useState(product?.mfg_month_year || '');
-  const [customerCare, setCustomerCare] = useState(product?.customer_care || '');
+  const [countryOfOrigin, setCountryOfOrigin] = useState(
+    product?.country_of_origin ||
+    product?.compliance?.country_of_origin ||
+    ''
+  );
+  const [manufacturerDetails, setManufacturerDetails] = useState(
+    product?.manufacturer_details ||
+    product?.compliance?.manufacturer_details ||
+    ''
+  );
+  const [packerDetails, setPackerDetails] = useState(
+    product?.packer_details ||
+    product?.compliance?.packer_details ||
+    ''
+  );
+  const [importerDetails, setImporterDetails] = useState(
+    product?.importer_details ||
+    product?.compliance?.importer_details ||
+    ''
+  );
+  const [mfgMonthYear, setMfgMonthYear] = useState(
+    product?.mfg_month_year ||
+    product?.compliance?.mfg_month_year ||
+    ''
+  );
+  const [customerCare, setCustomerCare] = useState(
+    product?.customer_care ||
+    product?.compliance?.customer_care ||
+    ''
+  );
   
-  const [images, setImages] = useState<ProductImage[]>(product?.images || []);
+  const [images, setImages] = useState<ProductImage[]>(
+    product?.images ||
+    (product?.primary_image?.url
+      ? [{
+          id: String(product.primary_image.id || 'primary'),
+          uri: product.primary_image.url,
+          fileName: product.primary_image.file_name || 'primary.jpg',
+          isPrimary: true,
+        }]
+      : [])
+  );
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  // Load dropdown data from API
+  useEffect(() => {
+    const loadDropdownData = async () => {
+      try {
+        const [brandsRes, categoriesRes, productTypesRes] = await Promise.all([
+          getAllBrands(),
+          getAllCategories(),
+          getAllProductTypes(),
+        ]);
+
+        const brandsRaw = brandsRes?.data?.data.brands || [];
+        const categoriesRaw = categoriesRes?.data?.data.categories || [];
+        const productTypesRaw = productTypesRes?.data?.data?.product_types || [];
+
+        setBrandOptions(brandsRaw);
+        setCategoryOptions(categoriesRaw);
+        setProductTypeOptions(productTypesRaw);
+      } catch (e) {
+        console.error('Failed to load dropdown data:', e);
+      }
+    };
+
+    loadDropdownData();
+  }, []);
 
   // Pick Images
   const handlePickImages = () => {
@@ -176,17 +250,30 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
     setLoading(true);
     
     try {
-    const productData = {
+      // Get logged-in user id for user_id field
+      let userId: number | null = null;
+      try {
+        const storedUser = await StorageService.getUser();
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          const rawUser = parsed.user || parsed;
+          if (rawUser?.id) {
+            userId = Number(rawUser.id);
+          }
+        }
+      } catch (e) {
+        console.warn('Unable to parse stored user for user_id', e);
+      }
+
+      const productData = {
+        user_id: userId ?? undefined,
         title,
-        brand_id: brandId,
-        category_id: categoryId,
+        price_mrp: parseFloat(priceMRP),
+        brand: brandId ? parseInt(brandId, 10) : null,
+        category: categoryId ? parseInt(categoryId, 10) : null,
         sku,
         style_code: styleCode,
         model_name: modelName,
-        short_description: shortDescription,
-        long_description: longDescription,
-        sales_package: salesPackage,
-        is_active: isActive,
         product_type: productType,
         color,
         brand_color: brandColor,
@@ -196,36 +283,51 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
         pattern,
         stitching_type: stitchingType,
         ideal_for: idealFor,
+        unit,
         top_length_value: topLengthValue ? parseFloat(topLengthValue) : null,
         top_length_unit: topLengthUnit,
-        unit,
-        currency_code: currencyCode,
-        price_mrp: parseFloat(priceMRP),
+        sales_package: salesPackage,
+        short_description: shortDescription,
+        long_description: longDescription,
+        is_active: isActive,
         price_sale: priceSale ? parseFloat(priceSale) : null,
-        stock_qty: parseFloat(stockQty),
+        currency_code: currencyCode,
         country_of_origin: countryOfOrigin,
         manufacturer_details: manufacturerDetails,
         packer_details: packerDetails,
         importer_details: importerDetails,
         mfg_month_year: mfgMonthYear,
         customer_care: customerCare,
-        images: images,
+        // You can add stock_qty or images when backend supports them
       };
       
       console.log('Product Data:', productData);
+
+      let response;
+      if (mode === 'edit' && product?.id) {
+        response = await updateProduct(product.id, productData);
+      } else {
+        response = await createProduct(productData);
+      }
+
+      console.log('Product save response:', response?.data);
       
-      // TODO: API Integration
-      
-      setLoading(false);
-    Alert.alert(
-      'Success',
-      `Product ${mode === 'add' ? 'added' : 'updated'} successfully!`,
+      Alert.alert(
+        'Success',
+        `Product ${mode === 'add' ? 'added' : 'updated'} successfully!`,
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Failed to save product:', error?.response?.data || error?.message || error);
+
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Failed to save product. Please try again.';
+
+      Alert.alert('Error', errorMessage);
+    } finally {
       setLoading(false);
-      Alert.alert('Error', 'Failed to save product');
-      console.error(error);
     }
   };
 
@@ -451,7 +553,7 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
               setBrandId,
               [
                 { label: 'Select Brand', value: '' },
-                ...brands.map(b => ({ label: b.name, value: b.id.toString() }))
+                ...brandOptions.map(b => ({ label: b.name, value: String(b.id) }))
               ]
             )}
             
@@ -461,7 +563,7 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
               setCategoryId,
               [
                 { label: 'Select Category', value: '' },
-                ...categories.map(c => ({ label: c.name, value: c.id.toString() }))
+                ...categoryOptions.map(c => ({ label: c.name, value: String(c.id) }))
               ],
               'categoryId',
               true
@@ -499,11 +601,7 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
               setProductType,
               [
                 { label: 'Select Type', value: '' },
-                { label: 'Shirt Fabric', value: 'Shirt Fabric' },
-                { label: 'Suiting', value: 'Suiting' },
-                { label: 'Trouser Fabric', value: 'Trouser Fabric' },
-                { label: 'Formal Wear', value: 'Formal Wear' },
-                { label: 'Casual Wear', value: 'Casual Wear' },
+                ...productTypeOptions.map(p => ({ label: p.name, value: String(p.name) }))
               ]
             )}
             

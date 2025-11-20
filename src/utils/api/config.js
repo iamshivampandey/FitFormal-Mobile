@@ -53,6 +53,9 @@ const API_CONFIG = {
     CREATE_PRODUCT: '/api/products',
     UPDATE_PRODUCT: '/api/products/:id',
     DELETE_PRODUCT: '/api/products/:id',
+    GET_ALL_BRANDS: '/api/products/getAllBrands',
+    GET_ALL_PRODUCT_TYPES: '/api/products/getAllProductTypes',
+    GET_ALL_CATEGORIES: '/api/products/getAllCategories',
     
     // Measurement endpoints
     GET_MEASUREMENTS: '/api/measurements',
