@@ -437,6 +437,48 @@ export default function Profile({ navigation }: any): React.JSX.Element {
             )}
           </View>
 
+          {/* Business Information - only for non-customer roles */}
+          {userRole !== 'customer' && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardTitleContainer}>
+                  <View style={styles.cardIconCircle}>
+                    <Image source={Images.shopping_bag} style={styles.cardIconImage} />
+                  </View>
+                  <View>
+                    <Text style={styles.cardTitle}>Business Information</Text>
+                    <Text style={styles.cardSubtitle}>
+                      Key details for your shop or tailoring business
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.businessRow}>
+                <Text style={styles.businessLabel}>Business Role</Text>
+                <Text style={styles.businessValue}>
+                  {role || getRoleDisplayName(userRole)}
+                </Text>
+              </View>
+              <View style={styles.businessRow}>
+                <Text style={styles.businessLabel}>Primary Contact</Text>
+                <Text style={styles.businessValue}>
+                  {firstName || lastName
+                    ? `${firstName} ${lastName}`.trim()
+                    : 'Not set'}
+                </Text>
+              </View>
+              <View style={styles.businessRow}>
+                <Text style={styles.businessLabel}>Business Email</Text>
+                <Text style={styles.businessValue}>{email || 'Not set'}</Text>
+              </View>
+              <View style={styles.businessRow}>
+                <Text style={styles.businessLabel}>Contact Number</Text>
+                <Text style={styles.businessValue}>{phoneNumber || 'Not set'}</Text>
+              </View>
+            </View>
+          )}
+
           {/* Account Actions Card */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -778,6 +820,25 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  // Business info
+  businessRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  businessLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontFamily: GILROY_REGULAR,
+  },
+  businessValue: {
+    fontSize: 14,
     color: Colors.textPrimary,
     fontFamily: GILROY_SEMIBOLD,
   },

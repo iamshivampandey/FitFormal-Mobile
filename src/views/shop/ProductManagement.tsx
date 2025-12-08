@@ -16,8 +16,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../utils/colors';
 import { productImages } from '../../utils/images';
 import * as Images from '../../utils/images';
-import { getProducts } from '../../utils/api/productApi';
+import { getProducts, deleteProduct } from '../../utils/api/productApi';
 import StorageService from '../../services/storage.service';
+import { showSuccessMessage, showErrorMessage } from '../../utils/flashMessage';
 
 interface Product {
   id: string;
@@ -126,11 +127,12 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
       setProducts(mapped);
     } catch (error: any) {
       console.error('Failed to load products:', error?.response?.data || error?.message || error);
-      setLoadError(
+      const message =
         error?.response?.data?.message ||
-          error?.message ||
-          'Failed to load products. Please try again.'
-      );
+        error?.message ||
+        'Failed to load products. Please try again.';
+      setLoadError(message);
+      showErrorMessage('Error loading products', message);
     } finally {
       setLoading(false);
     }
@@ -170,11 +172,29 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            try {
+              const response = await deleteProduct(productId);
+              console.log('Delete product response:', response?.data);
+
             setProducts((prevProducts) =>
               prevProducts.filter((product) => product.id !== productId)
             );
-            Alert.alert('Success', 'Product deleted successfully');
+
+              showSuccessMessage('Product deleted', 'Product deleted successfully.');
+            } catch (error: any) {
+              console.error(
+                'Failed to delete product:',
+                error?.response?.data || error?.message || error
+              );
+
+              const errorMessage =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                'Failed to delete product. Please try again.';
+
+              showErrorMessage('Delete failed', errorMessage);
+            }
           },
         },
       ]
@@ -210,7 +230,7 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
       }
     >
       <Image source={product.image} style={styles.productImage} resizeMode="cover" />
-
+      
       <View style={styles.productDetails}>
         <View style={styles.productHeader}>
           <View style={styles.productInfo}>

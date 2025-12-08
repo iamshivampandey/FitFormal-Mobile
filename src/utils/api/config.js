@@ -23,7 +23,7 @@ const API_CONFIG = {
   
   // For Android Emulator:
   // BASE_URL: 'http://10.0.2.2:5000',
-
+  
   // For Physical Device (replace with your computer's IP):
   // BASE_URL: 'http://192.168.1.100:5000',
   
@@ -66,6 +66,9 @@ const API_CONFIG = {
     GET_ORDERS: '/api/orders',
     CREATE_ORDER: '/api/orders',
     UPDATE_ORDER: '/api/orders/:id',
+    
+    // Business / seller profile endpoints
+    SAVE_BUSINESS_INFO: '/api/business/saveBusinessInfo',
   },
 };
 

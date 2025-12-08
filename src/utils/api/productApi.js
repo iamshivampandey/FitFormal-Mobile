@@ -24,6 +24,17 @@ export const updateProduct = async (productId, productData) => {
 };
 
 /**
+ * Delete a product by id
+ * @param {string|number} productId
+ * @returns {Promise} Axios response
+ */
+export const deleteProduct = async (productId) => {
+  const baseEndpoint = API_CONFIG.ENDPOINTS.DELETE_PRODUCT;
+  const endpoint = baseEndpoint.replace(":id", String(productId));
+  return AxiosConfig.delete(endpoint);
+};
+
+/**
  * Fetch products list
  * @param {Object} params - Optional query params (pagination, filters)
  * @returns {Promise} Axios response

@@ -10,16 +10,19 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppRootNavigator from './src/routes';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './src/context/AuthContext';
-// import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import FlashMessage from 'react-native-flash-message';
 
 function App() {
   return (
+    <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <AppContent />
       </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -32,6 +35,7 @@ function AppContent() {
         <NavigationContainer>
           <AppRootNavigator />
         </NavigationContainer>
+        <FlashMessage position="top" />
       </AuthProvider>
     </View>
   );

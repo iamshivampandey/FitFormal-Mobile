@@ -47,7 +47,7 @@ const ShopHomeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
-
+  
   // Calculate tab bar height to add bottom padding
   const tabBarHeight = Platform.OS === 'ios' ? 65 + insets.bottom : 70;
 

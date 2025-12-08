@@ -26,6 +26,7 @@ import {
   getAllCategories,
   getAllProductTypes,
 } from '../../utils/api/productApi';
+import { showSuccessMessage, showErrorMessage } from '../../utils/flashMessage';
 import StorageService from '../../services/storage.service';
 
 interface ProductImage {
@@ -311,12 +312,11 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
       }
 
       console.log('Product save response:', response?.data);
-      
-      Alert.alert(
-        'Success',
-        `Product ${mode === 'add' ? 'added' : 'updated'} successfully!`,
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      showSuccessMessage(
+        'Product saved',
+        `Product ${mode === 'add' ? 'added' : 'updated'} successfully.`
       );
+      navigation.goBack();
     } catch (error: any) {
       console.error('Failed to save product:', error?.response?.data || error?.message || error);
 
@@ -325,7 +325,7 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
         error?.response?.data?.error ||
         'Failed to save product. Please try again.';
 
-      Alert.alert('Error', errorMessage);
+      showErrorMessage('Error saving product', errorMessage);
     } finally {
       setLoading(false);
     }

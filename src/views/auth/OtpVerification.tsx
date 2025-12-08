@@ -85,10 +85,23 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
           text: 'OK',
           onPress: () => {
             if (type === 'signUp') {
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'SignIn' }],
-              });
+              const role = data?.userRole;
+              if (role === 'shop' || role === 'tailor' || role === 'tailor_shop') {
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'BusinessInfoOnboarding',
+                      params: { role, signUpData: data },
+                    },
+                  ],
+                });
+              } else {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'SignIn' }],
+                });
+              }
             } else {
               navigation.goBack();
             }

@@ -306,9 +306,9 @@ export default function TabBarNavigation(): React.JSX.Element {
           tabBarIcon: ({ focused, size }) => (
             <Icon
               name={focused ? 'cart' : 'cart-outline'}
-              size={size}
-              color={focused ? Colors.warmBrownColor : Colors.grey}
-            />
+            size={size}
+            color={focused ? Colors.warmBrownColor : Colors.grey}
+          />
           ),
         }}
       />
