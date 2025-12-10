@@ -10,8 +10,10 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+  KeyboardAvoidingView,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../../utils/colors';
 import CustomInput from '../../components/CustomInput';
@@ -20,6 +22,7 @@ import StorageService from '../../services/storage.service';
 import { useAuth } from '../../context/AuthContext';
 import { logoutUser } from '../../utils/authApi';
 import { getBackendRoleName } from '../../utils/constants/roles';
+import { getBusinessInfo } from '../../utils/api/businessApi';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
 import * as Images from '../../utils/images';
 
@@ -50,6 +53,10 @@ export default function Profile({ navigation }: any): React.JSX.Element {
   const [age, setAge] = useState('');
   const [role, setRole] = useState('');
   
+  // Business info states
+  const [businessInfo, setBusinessInfo] = useState<any>(null);
+  const [loadingBusinessInfo, setLoadingBusinessInfo] = useState(false);
+  
   // Error states
   const [firstNameError, setFirstNameError] = useState('');
   const [lastNameError, setLastNameError] = useState('');
@@ -63,6 +70,15 @@ export default function Profile({ navigation }: any): React.JSX.Element {
   useEffect(() => {
     loadUserData();
   }, []);
+
+  // Load business info when screen focuses
+  useFocusEffect(
+    React.useCallback(() => {
+      if (userRole !== 'customer') {
+        loadBusinessInfo();
+      }
+    }, [userRole])
+  );
 
   const loadUserData = async () => {
     try {
@@ -146,6 +162,42 @@ export default function Profile({ navigation }: any): React.JSX.Element {
       'seller': '🏪 Seller', // Map API "Seller" as well
     };
     return roleMap[role.toLowerCase()] || role;
+  };
+
+  const loadBusinessInfo = async () => {
+    try {
+      setLoadingBusinessInfo(true);
+      const userData = await StorageService.getUser();
+      if (!userData) {
+        setLoadingBusinessInfo(false);
+        return;
+      }
+
+      const parsedUser = typeof userData === 'string' ? JSON.parse(userData) : userData;
+      const userId = parsedUser?.user?.id || parsedUser?.id;
+
+      if (!userId) {
+        setLoadingBusinessInfo(false);
+        return;
+      }
+
+      const response = await getBusinessInfo(userId);
+      const data = response.data?.data || response.data?.business || response.data;
+      
+      if (data) {
+        setBusinessInfo(data);
+        console.log('✅ Business info loaded:', data);
+      }
+    } catch (error: any) {
+      console.error('❌ Error loading business info:', error);
+      // Don't show error if business info doesn't exist yet (404 is expected for new users)
+      if (error.response?.status !== 404) {
+        console.warn('⚠️ Business info not found or error loading');
+      }
+      setBusinessInfo(null);
+    } finally {
+      setLoadingBusinessInfo(false);
+    }
   };
 
   const validateInputs = (): boolean => {
@@ -264,21 +316,26 @@ export default function Profile({ navigation }: any): React.JSX.Element {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.warmBrownColor} />
           <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 40 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Gradient Header */}
         <LinearGradient
@@ -287,7 +344,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
           end={{ x: 1, y: 1 }}
           style={styles.headerGradient}
         >
-          <SafeAreaView edges={['top']}>
+          <View style={{ paddingTop: insets.top }}>
             <View style={styles.headerContent}>
               {/* Avatar with Shadow */}
               <View style={styles.avatarContainer}>
@@ -314,7 +371,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
               </View>
               {!!email && <Text style={styles.userEmail}>{email}</Text>}
             </View>
-          </SafeAreaView>
+          </View>
         </LinearGradient>
 
         <View style={styles.content}>
@@ -452,30 +509,139 @@ export default function Profile({ navigation }: any): React.JSX.Element {
                     </Text>
                   </View>
                 </View>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('BusinessInfoEdit', { businessInfo })}
+                  style={styles.editButton}
+                >
+                  <Image source={Images.edit_icon} style={styles.editAvatarIcon} />
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.businessRow}>
-                <Text style={styles.businessLabel}>Business Role</Text>
-                <Text style={styles.businessValue}>
-                  {role || getRoleDisplayName(userRole)}
-                </Text>
-              </View>
-              <View style={styles.businessRow}>
-                <Text style={styles.businessLabel}>Primary Contact</Text>
-                <Text style={styles.businessValue}>
-                  {firstName || lastName
-                    ? `${firstName} ${lastName}`.trim()
-                    : 'Not set'}
-                </Text>
-              </View>
-              <View style={styles.businessRow}>
-                <Text style={styles.businessLabel}>Business Email</Text>
-                <Text style={styles.businessValue}>{email || 'Not set'}</Text>
-              </View>
-              <View style={styles.businessRow}>
-                <Text style={styles.businessLabel}>Contact Number</Text>
-                <Text style={styles.businessValue}>{phoneNumber || 'Not set'}</Text>
-              </View>
+              {loadingBusinessInfo ? (
+                <View style={styles.loadingBusinessContainer}>
+                  <ActivityIndicator size="small" color={Colors.warmBrownColor} />
+                  <Text style={styles.loadingBusinessText}>Loading business info...</Text>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.businessItem}>
+                    <Text style={styles.businessLabel}>Business Name</Text>
+                    <Text style={styles.businessValue}>
+                      {businessInfo?.businessName || 'Not set'}
+                    </Text>
+                  </View>
+                  <View style={styles.businessItem}>
+                    <Text style={styles.businessLabel}>Business Role</Text>
+                    <Text style={styles.businessValue}>
+                      {role || getRoleDisplayName(userRole || 'customer')}
+                    </Text>
+                  </View>
+                  <View style={styles.businessItem}>
+                    <Text style={styles.businessLabel}>Owner Name</Text>
+                    <Text style={styles.businessValue}>
+                      {businessInfo?.ownerName || firstName || lastName
+                        ? `${firstName} ${lastName}`.trim()
+                        : 'Not set'}
+                    </Text>
+                  </View>
+                  <View style={styles.businessItem}>
+                    <Text style={styles.businessLabel}>Business Email</Text>
+                    <Text style={styles.businessValue}>
+                      {businessInfo?.businessEmail || email || 'Not set'}
+                    </Text>
+                  </View>
+                  <View style={styles.businessItem}>
+                    <Text style={styles.businessLabel}>Contact Number</Text>
+                    <Text style={styles.businessValue}>
+                      {businessInfo?.businessPhone || phoneNumber || 'Not set'}
+                    </Text>
+                  </View>
+                  {businessInfo?.alternateNumber && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Alternate Number</Text>
+                      <Text style={styles.businessValue}>{businessInfo.alternateNumber}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.address && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Address</Text>
+                      <Text style={styles.businessValue}>{businessInfo.address}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.city && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>City</Text>
+                      <Text style={styles.businessValue}>{businessInfo.city}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.state && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>State</Text>
+                      <Text style={styles.businessValue}>{businessInfo.state}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.country && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Country</Text>
+                      <Text style={styles.businessValue}>{businessInfo.country}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.zipCode && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>ZIP Code</Text>
+                      <Text style={styles.businessValue}>{businessInfo.zipCode}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.gstNumber && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>GST Number</Text>
+                      <Text style={styles.businessValue}>{businessInfo.gstNumber}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.panNumber && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>PAN Number</Text>
+                      <Text style={styles.businessValue}>{businessInfo.panNumber}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.openingTime && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Opening Time</Text>
+                      <Text style={styles.businessValue}>{businessInfo.openingTime}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.closingTime && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Closing Time</Text>
+                      <Text style={styles.businessValue}>{businessInfo.closingTime}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.weeklyOff && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Weekly Off</Text>
+                      <Text style={styles.businessValue}>{businessInfo.weeklyOff}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.specialization && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Specialization</Text>
+                      <Text style={styles.businessValue}>{businessInfo.specialization}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.yearsOfExperience && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Years of Experience</Text>
+                      <Text style={styles.businessValue}>{businessInfo.yearsOfExperience}</Text>
+                    </View>
+                  )}
+                  {businessInfo?.businessDescription && (
+                    <View style={styles.businessItem}>
+                      <Text style={styles.businessLabel}>Business Description</Text>
+                      <Text style={styles.businessValue}>{businessInfo.businessDescription}</Text>
+                    </View>
+                  )}
+                </>
+              )}
             </View>
           )}
 
@@ -553,7 +719,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
           {/* <Text style={styles.versionText}>FitFormal v1.0.0</Text> */}
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -801,6 +967,26 @@ const styles = StyleSheet.create({
   formContainer: {
     gap: 16,
   },
+  infoContainer: {
+    gap: 0,
+  },
+  infoItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: GILROY_MEDIUM,
+    marginBottom: 6,
+  },
+  infoValue: {
+    fontSize: 15,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
+    flexWrap: 'wrap',
+  },
   actionButtons: {
     marginTop: 24,
     gap: 12,
@@ -824,23 +1010,33 @@ const styles = StyleSheet.create({
     fontFamily: GILROY_SEMIBOLD,
   },
   // Business info
-  businessRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
+  businessItem: {
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
   businessLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textSecondary,
-    fontFamily: GILROY_REGULAR,
+    fontFamily: GILROY_MEDIUM,
+    marginBottom: 6,
   },
   businessValue: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textPrimary,
     fontFamily: GILROY_SEMIBOLD,
+    flexWrap: 'wrap',
+  },
+  loadingBusinessContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingBusinessText: {
+    marginTop: 8,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: GILROY_REGULAR,
   },
   
   // Action Items

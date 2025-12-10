@@ -9,8 +9,9 @@ import {
   Platform,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { useNavigation } from '@react-navigation/native';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR } from '../../utils/fonts';
@@ -186,7 +187,11 @@ const BookMeasurementScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -257,7 +262,7 @@ const BookMeasurementScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       )}
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 

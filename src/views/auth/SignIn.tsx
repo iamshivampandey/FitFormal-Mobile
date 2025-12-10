@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import React, { useState } from 'react';
 import FastImage from 'react-native-fast-image';
@@ -205,11 +207,16 @@ const LoginScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <ScrollView
         style={styles.subContainer}
         bounces={false}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.Header}>
           <Text style={styles.HeaderBigText}>
@@ -380,7 +387,7 @@ const LoginScreen = ({ navigation }: any) => {
       </ScrollView>
 
       <LoadingOverlay visible={loading} message="Signing in..." />
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

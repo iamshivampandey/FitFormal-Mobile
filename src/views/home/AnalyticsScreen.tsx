@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../utils/colors';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR } from '../../utils/fonts';
@@ -8,13 +8,14 @@ import * as Images from '../../utils/images';
 
 const AnalyticsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Image source={Images.arrow_left} style={styles.backIcon} />
@@ -101,7 +102,7 @@ const AnalyticsScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

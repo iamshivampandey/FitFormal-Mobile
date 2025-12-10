@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -44,6 +44,7 @@ interface AddEditProductProps {
 const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) => {
   console.log(JSON.stringify(route.params));
   const { product, mode } = route?.params || { mode: 'add' };
+  const insets = useSafeAreaInsets();
   
   // Data options loaded from backend
   const [brandOptions, setBrandOptions] = useState<{ id: number | string; name: string }[]>([]);
@@ -521,7 +522,7 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -812,7 +813,7 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
           <View style={styles.bottomPadding} />
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

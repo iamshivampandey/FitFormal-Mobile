@@ -8,7 +8,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../../utils/colors';
 import StorageService from '../../services/storage.service';
@@ -23,6 +23,7 @@ interface SettingsScreenProps {
 
 export default function SettingsScreen({ navigation }: SettingsScreenProps): React.JSX.Element {
   const { signOut } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -61,7 +62,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps): Rea
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -317,7 +318,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps): Rea
           <Text style={styles.versionText}>FitFormal v1.0.0 • Made with care for formal wear</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

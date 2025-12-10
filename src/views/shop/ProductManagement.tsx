@@ -11,7 +11,7 @@ import {
   Switch,
   TextInput,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../utils/colors';
 import { productImages } from '../../utils/images';
@@ -294,7 +294,7 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -386,7 +386,7 @@ const ProductManagement: React.FC<{ navigation: any }> = ({ navigation }) => {
       <TouchableOpacity style={styles.fab} onPress={handleAddProduct}>
         <Image source={Images.add_icon} style={styles.fabIconImage} />
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

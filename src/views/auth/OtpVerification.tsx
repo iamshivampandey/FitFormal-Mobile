@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   Alert,
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { Colors } from '../../utils/colors';
 import { strings } from '../../utils/string/strings';
@@ -85,23 +88,12 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
           text: 'OK',
           onPress: () => {
             if (type === 'signUp') {
-              const role = data?.userRole;
-              if (role === 'shop' || role === 'tailor' || role === 'tailor_shop') {
-                navigation.reset({
-                  index: 0,
-                  routes: [
-                    {
-                      name: 'BusinessInfoOnboarding',
-                      params: { role, signUpData: data },
-                    },
-                  ],
-                });
-              } else {
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'SignIn' }],
-                });
-              }
+              // After OTP verification, navigate to sign in
+              // Business info is already sent during signup, so no need to go to BusinessInfoOnboarding
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'SignIn' }],
+              });
             } else {
               navigation.goBack();
             }
@@ -137,8 +129,16 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <Text style={styles.title}>Verify OTP</Text>
           <Text style={styles.subtitle}>
@@ -196,8 +196,8 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
         >
           <Text style={styles.backText}>Back to Sign Up</Text>
         </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

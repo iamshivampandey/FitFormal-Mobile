@@ -8,7 +8,7 @@ import {
   Image,
   ImageSourcePropType,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { strings } from '../../utils/string/strings';
 import CustomButton from '../../components/CustomButton';
@@ -26,6 +26,7 @@ interface UserRole {
 
 const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
 
   const userRoles: UserRole[] = [
     {
@@ -145,7 +146,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {/* Header */}
@@ -188,7 +189,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
           <Text style={styles.backText}>Back to Sign In</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

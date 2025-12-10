@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   View,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -129,10 +131,59 @@ const SignUp = ({ navigation, route }: any) => {
         //   );
         // }
 
-                          navigation.navigate("OtpVerification", {
-                    data: { email, name, userName, age, userRole },
-                    type: 'signUp'
-                  });
+        // For business users (shop, tailor, tailor_shop), navigate to BusinessInfoOnboarding first
+        // Business info will be collected and sent with signup API call
+        if (userRole === 'shop' || userRole === 'tailor' || userRole === 'tailor_shop') {
+          navigation.navigate("BusinessInfoOnboarding", {
+            role: userRole,
+            signUpData: {
+              email: email.trim(),
+              name: name.trim(),
+              userName: userName.trim(),
+              age: age.trim(),
+              userRole: userRole,
+              phoneNumber: phoneNumber.trim(),
+              password: password,
+              firstName: nameParts[0] || "",
+              lastName: nameParts.slice(1).join(" ") || nameParts[0] || "",
+            },
+          });
+        } else {
+          // For regular customers, call signup API directly (no business info)
+          const signupData = {
+            email: email.trim(),
+            password: password,
+            firstName: nameParts[0] || "",
+            lastName: nameParts.slice(1).join(" ") || nameParts[0] || "",
+            phoneNumber: phoneNumber.trim(),
+            age: age.trim(),
+            roleName: userRole || 'customer',
+          };
+
+          console.log("Attempting customer signup with data:", { ...signupData, password: '***' });
+          
+          const response = await signUpWithEmailAndPassword(signupData);
+          
+          setLoading(false);
+          
+          if (response.data) {
+            Alert.alert(
+              "Success", 
+              `Account created successfully as ${roleData?.title || 'Customer'}! Please verify your OTP.`,
+              [
+                {
+                  text: "OK",
+                  onPress: () => {
+                    navigation.navigate("OtpVerification", {
+                      data: { email, name, userName, age, userRole },
+                      type: 'signUp'
+                    });
+                  }
+                }
+              ]
+            );
+          }
+        }
       } catch (e: any) {
         setLoading(false);
         const errorMessage = e.response?.data?.message || e.message || en.InternalServerError;
@@ -147,8 +198,17 @@ const SignUp = ({ navigation, route }: any) => {
   };
 
   return (
-    <View style={styles.mainContainer}>
-      <ScrollView style={styles.subContainer} bounces={false} showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView
+      style={styles.mainContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView
+        style={styles.subContainer}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.container}>
         <Text style={styles.HeaderBigText}>
             {strings.JOIN}
@@ -258,7 +318,7 @@ const SignUp = ({ navigation, route }: any) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

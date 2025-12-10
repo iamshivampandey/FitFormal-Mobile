@@ -10,7 +10,7 @@ import {
   Image,
   ImageSourcePropType,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { productImages } from '../../utils/images';
 import * as Images from '../../utils/images';
@@ -221,7 +221,7 @@ const ShopTailorDashboard: React.FC<ShopTailorDashboardProps> = ({ navigation })
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
@@ -391,7 +391,7 @@ const ShopTailorDashboard: React.FC<ShopTailorDashboardProps> = ({ navigation })
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

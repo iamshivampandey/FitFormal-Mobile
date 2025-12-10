@@ -12,7 +12,7 @@ import {
   Platform,
   ImageSourcePropType,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { strings } from '../../utils/string/strings';
 import { productImages } from '../../utils/images';
@@ -178,7 +178,7 @@ const HomeScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
@@ -266,7 +266,7 @@ const HomeScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

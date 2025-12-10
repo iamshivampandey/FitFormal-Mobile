@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import CustomButton from '../../components/CustomButton';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from '../../utils/fonts';
@@ -358,9 +358,9 @@ const ProductDetailScreen: React.FC = () => {
   const averageRating = reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top > 0 ? 10 : 15 }]}>
+      <View style={[styles.header, { paddingTop: 15 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
@@ -597,7 +597,7 @@ const ProductDetailScreen: React.FC = () => {
           style={styles.addToCartButton}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

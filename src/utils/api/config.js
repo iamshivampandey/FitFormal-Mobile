@@ -68,7 +68,16 @@ const API_CONFIG = {
     UPDATE_ORDER: '/api/orders/:id',
     
     // Business / seller profile endpoints
-    SAVE_BUSINESS_INFO: '/api/business/saveBusinessInfo',
+    SAVE_BUSINESS_INFO: '/api/business',
+    CREATE_UPDATE_BUSINESS: '/api/business',
+    GET_BUSINESS_INFO: '/api/business/user/:userId',
+    UPDATE_BUSINESS_INFO: '/api/business/:businessId',
+    
+    // Tailor items endpoints
+    GET_TAILOR_ITEMS: '/api/tailor-items',
+    GET_TAILOR_ITEM_PRICES: '/api/tailor-item-prices/business/:businessId',
+    SAVE_TAILOR_ITEM_PRICES: '/api/tailor-item-prices',
+    SAVE_TAILOR_ITEM_PRICES_BATCH: '/api/tailor-item-prices/batch',
   },
 };
 

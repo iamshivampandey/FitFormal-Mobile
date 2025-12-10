@@ -3,6 +3,22 @@ import StorageService from "../../services/storage.service";
 import { getFrontendRoleId, getBackendRoleName } from "../constants/roles";
 
 /**
+ * Convert frontend role name to backend role name string
+ * Frontend: 'customer', 'shop', 'tailor', 'tailor_shop'
+ * Backend expects: 'Customer', 'Seller', 'Tailor', 'Taylorseller'
+ */
+const getBackendRoleNameString = (frontendRole) => {
+  const roleMap = {
+    'customer': 'Customer',
+    'shop': 'Seller',
+    'tailor': 'Tailor',
+    'tailor_shop': 'Taylorseller',
+    'admin': 'Admin',
+  };
+  return roleMap[frontendRole?.toLowerCase()] || 'Customer';
+};
+
+/**
  * Sign up a new user with email and password
  * @param {Object} params - Signup parameters
  * @param {string} params.email - User email
@@ -12,12 +28,14 @@ import { getFrontendRoleId, getBackendRoleName } from "../constants/roles";
  * @param {string} params.phoneNumber - User phone number
  * @param {string} params.age - User age (optional)
  * @param {string} params.roleName - User role frontend name (e.g., 'customer', 'shop', 'tailor', 'tailor_shop')
+ * @param {Object} [params.businessInfo] - Business information (optional, for shop/tailor users)
  * @returns {Promise} Response from the server
  */
 export const signUpWithEmailAndPassword = async (params) => {
   try {
-    // Convert frontend role name to backend role ID
-    const roleId = getFrontendRoleId(params.roleName || 'customer');
+    // Convert frontend role name to backend role name string
+    // API expects: 'Customer', 'Seller', 'Tailor', 'Taylorseller'
+    const backendRoleName = getBackendRoleNameString(params.roleName || 'customer');
     
     const payload = {
       email: params.email,
@@ -25,11 +43,19 @@ export const signUpWithEmailAndPassword = async (params) => {
       firstName: params.firstName,
       lastName: params.lastName,
       phoneNumber: params.phoneNumber,
-      roleName: roleId, // Send role ID instead of string
+      roleName: backendRoleName, // Send role name string as API expects
     };
 
-    console.log("Signup payload:", payload);
-    console.log("Role mapping:", params.roleName, "->", roleId);
+    // If business info exists, add it to the signup payload
+    if (params.businessInfo) {
+      payload.businessInfo = params.businessInfo;
+      console.log('✅ Business info added to signup payload');
+      console.log('🏢 Business info keys:', Object.keys(params.businessInfo));
+    }
+
+    console.log("🚀 Making API call to /api/auth/signup");
+    console.log("📦 Complete signup payload:", payload);
+    console.log("Role mapping:", params.roleName, "->", backendRoleName);
     
     const response = await AxiosConfig.post("/api/auth/signup", payload);
 

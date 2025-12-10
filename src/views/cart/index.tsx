@@ -8,7 +8,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import {
   GILROY_SEMIBOLD,
@@ -167,7 +167,7 @@ export default function Cart(): React.JSX.Element {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={[styles.content, { paddingBottom: tabBarHeight + 16 }]}>
         {/* Header */}
         <View style={styles.header}>
@@ -239,7 +239,7 @@ export default function Cart(): React.JSX.Element {
           </Text>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

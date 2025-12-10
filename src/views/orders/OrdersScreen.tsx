@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR } from '../../utils/fonts';
 
@@ -70,7 +70,7 @@ const OrdersScreen: React.FC = () => {
   const tabBarHeight = Platform.OS === 'ios' ? 65 + insets.bottom : 70;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 16 }]}
         showsVerticalScrollIndicator={false}
@@ -113,7 +113,7 @@ const OrdersScreen: React.FC = () => {
           })}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

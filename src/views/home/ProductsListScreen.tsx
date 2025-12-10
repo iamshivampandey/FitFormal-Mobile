@@ -12,7 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../utils/colors';
 import { productImages } from '../../utils/images';
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR } from '../../utils/fonts';
@@ -283,9 +283,9 @@ const ProductsListScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top > 0 ? 10 : 15 }]}>
+      <View style={[styles.header, { paddingTop: 15 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
@@ -365,7 +365,7 @@ const ProductsListScreen: React.FC = () => {
           </Text>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
