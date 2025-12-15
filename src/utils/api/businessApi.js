@@ -107,7 +107,7 @@ export const getBusinessInfo = async (userId = null) => {
 /**
  * Update business info
  * @param {Object} payload - Business information payload
- * @param {number} businessId - Business ID (optional, will be fetched if not provided)
+ * @param {number} businessId - Business ID (required)
  * @returns {Promise} Axios response
  */
 export const updateBusinessInfo = async (payload, businessId = null) => {
@@ -128,6 +128,7 @@ export const updateBusinessInfo = async (payload, businessId = null) => {
     const parsedUser = typeof userData === 'string' ? JSON.parse(userData) : userData;
     const userId = parsedUser?.user?.id || parsedUser?.id;
 
+    // Include all fields from payload, not just basic ones
     const apiPayload = {
       userId: userId,
       businessName: payload.businessName || '',
@@ -141,9 +142,30 @@ export const updateBusinessInfo = async (payload, businessId = null) => {
       country: payload.country || '',
       zipCode: payload.zipCode || '',
       businessType: payload.businessType || payload.role || '',
+      // Include additional fields
+      ownerName: payload.ownerName || '',
+      businessDescription: payload.businessDescription || '',
+      alternateNumber: payload.alternateNumber || '',
+      googleMapLink: payload.googleMapLink || '',
+      gpsLatitude: payload.gpsLatitude || '',
+      gpsLongitude: payload.gpsLongitude || '',
+      openingTime: payload.openingTime || '',
+      closingTime: payload.closingTime || '',
+      weeklyOff: payload.weeklyOff || payload.weeklyoff || '',
+      businessLogo: payload.businessLogo || '',
+      specialization: payload.specialization || '',
+      yearsOfExperience: payload.yearsOfExperience || '',
+      portfolioPhotos: payload.portfolioPhotos || '',
+      certifications: payload.certifications || '',
+      serviceTypes: payload.serviceTypes || '',
+      tailoringCategories: payload.tailoringCategories || '',
     };
 
-    const endpoint = `/api/business/${bid}`;
+    // Use PUT /business/:businessId endpoint
+    // Note: The endpoint should be /business/:businessId (not /api/business/:businessId)
+    // If your baseURL doesn't include /api, use /api/business/:businessId instead
+    const endpoint = `api/business/${bid}`;
+    console.log('Updating business with endpoint:', endpoint, 'and payload:', apiPayload);
     const response = await AxiosConfig.put(endpoint, apiPayload);
     
     console.log('Update Business API Response:', response?.data);

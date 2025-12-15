@@ -15,7 +15,7 @@ const API_CONFIG = {
   // Base URL for your backend API
   BASE_URL:
     Platform.OS === 'android'
-      ? 'http://10.0.2.2:5000' // Android emulator: forward to host machine
+      ? 'https://nigel-postrectal-lou.ngrok-free.dev' // Android emulator: forward to host machine
       : 'http://localhost:5000',
   
   // Alternative URLs for different environments

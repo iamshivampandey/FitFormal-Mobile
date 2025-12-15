@@ -83,6 +83,9 @@ const SignUp = ({ navigation, route }: any) => {
     } else if (password.length < 8) {
       setPasswordError("Password must be at least 8 characters");
       valid = false;
+    } else if (!/[@$!%*?&#^()_+\-=\[\]{}|;:'",.<>\/~`]/.test(password)) {
+      setPasswordError("Password must contain at least one special character");
+      valid = false;
     } else {
       setPasswordError("");
     }
@@ -95,7 +98,7 @@ const SignUp = ({ navigation, route }: any) => {
         setCheckboxError("");
       }
       
-      setLoading(true);
+      // setLoading(true);
       
       try {
         // const signupData = {
@@ -273,6 +276,7 @@ const SignUp = ({ navigation, route }: any) => {
             }}
             error={phoneError}
             keyboardType="phone-pad"
+            maxLength={10}
           />
           
           <CustomInput

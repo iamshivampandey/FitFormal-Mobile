@@ -471,6 +471,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
                 error={phoneError}
                 keyboardType="phone-pad"
                 editable={isEditing}
+                maxLength={10}
               />
             </View>
 
@@ -504,9 +505,9 @@ export default function Profile({ navigation }: any): React.JSX.Element {
                   </View>
                   <View>
                     <Text style={styles.cardTitle}>Business Information</Text>
-                    <Text style={styles.cardSubtitle}>
+                    {/* <Text style={styles.cardSubtitle}>
                       Key details for your shop or tailoring business
-                    </Text>
+                    </Text> */}
                   </View>
                 </View>
                 <TouchableOpacity

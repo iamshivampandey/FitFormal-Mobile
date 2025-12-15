@@ -11,6 +11,7 @@ import {
   Image,
   Alert,
   Switch,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -60,24 +61,24 @@ const BusinessInfoEdit: React.FC = () => {
   const isTailorRole = userRole === 'tailor' || userRole === 'tailor_shop';
 
   // Basic Information
-  const [ownerName, setOwnerName] = useState(initialBusinessInfo?.ownerName || '');
-  const [businessName, setBusinessName] = useState(initialBusinessInfo?.businessName || '');
-  const [businessDescription, setBusinessDescription] = useState(initialBusinessInfo?.businessDescription || '');
-  const [logoUri, setLogoUri] = useState<string | null>(initialBusinessInfo?.businessLogo || null);
-  const [logoBase64, setLogoBase64] = useState<string>(initialBusinessInfo?.businessLogo || '');
+  const [ownerName, setOwnerName] = useState(initialBusinessInfo?.ownerName || initialBusinessInfo?.OwnerName || '');
+  const [businessName, setBusinessName] = useState(initialBusinessInfo?.businessName || initialBusinessInfo?.BusinessName || '');
+  const [businessDescription, setBusinessDescription] = useState(initialBusinessInfo?.businessDescription || initialBusinessInfo?.BusinessDescription || '');
+  const [logoUri, setLogoUri] = useState<string | null>(initialBusinessInfo?.businessLogo || initialBusinessInfo?.BusinessLogo || null);
+  const [logoBase64, setLogoBase64] = useState<string>(initialBusinessInfo?.businessLogo || initialBusinessInfo?.BusinessLogo || '');
 
   // Contact & Location
-  const [email, setEmail] = useState(initialBusinessInfo?.businessEmail || '');
-  const [mobileNumber, setMobileNumber] = useState(initialBusinessInfo?.businessPhone || '');
+  const [email, setEmail] = useState(initialBusinessInfo?.businessEmail || initialBusinessInfo?.Email || '');
+  const [mobileNumber, setMobileNumber] = useState(initialBusinessInfo?.businessPhone || initialBusinessInfo?.mobileNumber || '');
   const [alternateNumber, setAlternateNumber] = useState(initialBusinessInfo?.alternateNumber || '');
-  const [shopAddress, setShopAddress] = useState(initialBusinessInfo?.address || '');
+  const [shopAddress, setShopAddress] = useState(initialBusinessInfo?.address || initialBusinessInfo?.shopAddress || '');
   const [googleMapLink, setGoogleMapLink] = useState(initialBusinessInfo?.googleMapLink || '');
-  const [gpsLatitude, setGpsLatitude] = useState(initialBusinessInfo?.gpsLatitude || '');
-  const [gpsLongitude, setGpsLongitude] = useState(initialBusinessInfo?.gpsLongitude || '');
-  const [workingCity, setWorkingCity] = useState(initialBusinessInfo?.city || '');
+  const [gpsLatitude, setGpsLatitude] = useState(initialBusinessInfo?.gpsLatitude?.toString() || '');
+  const [gpsLongitude, setGpsLongitude] = useState(initialBusinessInfo?.gpsLongitude?.toString() || '');
+  const [workingCity, setWorkingCity] = useState(initialBusinessInfo?.city || initialBusinessInfo?.workingCity || '');
   const [state, setState] = useState(initialBusinessInfo?.state || '');
   const [country, setCountry] = useState(initialBusinessInfo?.country || '');
-  const [zipCode, setZipCode] = useState(initialBusinessInfo?.zipCode || '');
+  const [zipCode, setZipCode] = useState(initialBusinessInfo?.zipCode?.toString() || '');
   const [gstNumber, setGstNumber] = useState(initialBusinessInfo?.gstNumber || '');
   const [panNumber, setPanNumber] = useState(initialBusinessInfo?.panNumber || '');
 
@@ -92,47 +93,150 @@ const BusinessInfoEdit: React.FC = () => {
 
   // Experience
   const [specialization, setSpecialization] = useState(initialBusinessInfo?.specialization || '');
-  const [yearsOfExperience, setYearsOfExperience] = useState(initialBusinessInfo?.yearsOfExperience || '');
+  const [yearsOfExperience, setYearsOfExperience] = useState(initialBusinessInfo?.yearsOfExperience?.toString() || '');
   const [portfolioPhotos, setPortfolioPhotos] = useState(initialBusinessInfo?.portfolioPhotos || '');
   const [certifications, setCertifications] = useState(initialBusinessInfo?.certifications || '');
 
   // Business Hours
-  const [openingTime, setOpeningTime] = useState(initialBusinessInfo?.openingTime || '');
-  const [closingTime, setClosingTime] = useState(initialBusinessInfo?.closingTime || '');
-  const [weeklyOff, setWeeklyOff] = useState(initialBusinessInfo?.weeklyOff || '');
+  const [openingTime, setOpeningTime] = useState('');
+  const [closingTime, setClosingTime] = useState('');
+  const [weeklyOff, setWeeklyOff] = useState(initialBusinessInfo?.weeklyoff || initialBusinessInfo?.weeklyOff || initialBusinessInfo?.WeeklyOff || '');
+  const [showOpeningTimePicker, setShowOpeningTimePicker] = useState(false);
+  const [showClosingTimePicker, setShowClosingTimePicker] = useState(false);
+  const [pickerHour, setPickerHour] = useState(9);
+  const [pickerMinute, setPickerMinute] = useState(0);
+  const [pickerIsAM, setPickerIsAM] = useState(true);
 
   // Form state
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Helper function to decode HTML entities
+  const decodeHtmlEntities = (str: string): string => {
+    if (!str) return '';
+    return str
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&#39;/g, "'");
+  };
+
+  // Helper function to convert ISO time to readable format
+  const formatTimeFromISO = (isoString: string): string => {
+    if (!isoString) return '';
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) return '';
+      
+      let hours = date.getUTCHours();
+      const minutes = date.getUTCMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
+      return `${hours}:${minutesStr} ${ampm}`;
+    } catch (e) {
+      console.error('Error formatting time:', e);
+      return '';
+    }
+  };
+
+  // Helper function to convert readable time to ISO format for backend
+  const convertTimeToISO = (timeStr: string): string => {
+    if (!timeStr) return '';
+    try {
+      // Parse format like "10:00 AM" or "9:00 PM"
+      const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!match) return timeStr; // Return as-is if format doesn't match
+      
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const ampm = match[3].toUpperCase();
+      
+      if (ampm === 'PM' && hours !== 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      
+      // Create a date with the time (using epoch date as base)
+      const date = new Date('1970-01-01T00:00:00.000Z');
+      date.setUTCHours(hours, minutes, 0, 0);
+      return date.toISOString();
+    } catch (e) {
+      console.error('Error converting time to ISO:', e);
+      return timeStr;
+    }
+  };
+
   // Load initial data
   useEffect(() => {
-    // Load services if available
+    // Load services if available - handle HTML entities
     if (initialBusinessInfo?.serviceTypes) {
       try {
-        const services = typeof initialBusinessInfo.serviceTypes === 'string' 
-          ? JSON.parse(initialBusinessInfo.serviceTypes)
-          : initialBusinessInfo.serviceTypes;
+        let serviceTypesStr = initialBusinessInfo.serviceTypes;
+        
+        // Decode HTML entities
+        serviceTypesStr = decodeHtmlEntities(serviceTypesStr);
+        
+        // Parse JSON
+        const services = typeof serviceTypesStr === 'string' 
+          ? JSON.parse(serviceTypesStr)
+          : serviceTypesStr;
+        
         if (Array.isArray(services)) {
-          setSelectedServices(services);
+          // Trim whitespace from service names
+          const trimmedServices = services.map((s: string) => s.trim()).filter((s: string) => s);
+          setSelectedServices(trimmedServices);
+          console.log('✅ Loaded services:', trimmedServices);
         }
       } catch (e) {
-        console.error('Error parsing serviceTypes:', e);
+        console.error('Error parsing serviceTypes:', e, initialBusinessInfo.serviceTypes);
       }
     }
 
     // Load tailoring categories if available
+    // Categories might come from tailorItemPrices array in the response
     if (initialBusinessInfo?.tailoringCategories) {
       try {
-        const categories = typeof initialBusinessInfo.tailoringCategories === 'string'
-          ? JSON.parse(initialBusinessInfo.tailoringCategories)
-          : initialBusinessInfo.tailoringCategories;
+        let categoriesStr = initialBusinessInfo.tailoringCategories;
+        
+        // Decode HTML entities if needed
+        categoriesStr = decodeHtmlEntities(categoriesStr);
+        
+        const categories = typeof categoriesStr === 'string'
+          ? JSON.parse(categoriesStr)
+          : categoriesStr;
+        
         if (Array.isArray(categories)) {
-          setSelectedTailoringCategories(categories);
+          const trimmedCategories = categories.map((c: string) => c.trim()).filter((c: string) => c);
+          setSelectedTailoringCategories(trimmedCategories);
+          console.log('✅ Loaded tailoring categories from tailoringCategories field:', trimmedCategories);
         }
       } catch (e) {
-        console.error('Error parsing tailoringCategories:', e);
+        console.error('Error parsing tailoringCategories:', e, initialBusinessInfo.tailoringCategories);
       }
+    }
+    
+    // Also check if categories can be extracted from tailorItemPrices
+    if (initialBusinessInfo?.tailorItemPrices && Array.isArray(initialBusinessInfo.tailorItemPrices)) {
+      try {
+        // Categories will be loaded when tailorItemPrices are processed in loadTailorItemPrices
+        console.log('✅ Found tailorItemPrices array, will load categories from there');
+      } catch (e) {
+        console.error('Error processing tailorItemPrices:', e);
+      }
+    }
+
+    // Format and load times
+    if (initialBusinessInfo?.openingTime) {
+      const formattedTime = formatTimeFromISO(initialBusinessInfo.openingTime);
+      setOpeningTime(formattedTime);
+      console.log('✅ Loaded opening time:', formattedTime);
+    }
+    
+    if (initialBusinessInfo?.closingTime) {
+      const formattedTime = formatTimeFromISO(initialBusinessInfo.closingTime);
+      setClosingTime(formattedTime);
+      console.log('✅ Loaded closing time:', formattedTime);
     }
 
     // Fetch tailor categories and prices
@@ -143,10 +247,16 @@ const BusinessInfoEdit: React.FC = () => {
 
   // Load tailor item prices after categories are loaded
   useEffect(() => {
-    if (isTailorRole && tailoringCategoryObjects.length > 0 && initialBusinessInfo?.id && selectedTailoringCategories.length > 0) {
-      loadTailorItemPrices();
+    if (isTailorRole && tailoringCategoryObjects.length > 0) {
+      const businessId = initialBusinessInfo?.id || initialBusinessInfo?.businessId;
+      if (businessId) {
+        // Load prices if we have selected categories, or if we have tailorItemPrices in response
+        if (selectedTailoringCategories.length > 0 || initialBusinessInfo?.tailorItemPrices) {
+          loadTailorItemPrices();
+        }
+      }
     }
-  }, [tailoringCategoryObjects.length, initialBusinessInfo?.id, isTailorRole]);
+  }, [tailoringCategoryObjects.length, initialBusinessInfo?.id, initialBusinessInfo?.businessId, isTailorRole]);
 
   const fetchTailoringCategories = async () => {
     setLoadingCategories(true);
@@ -173,14 +283,62 @@ const BusinessInfoEdit: React.FC = () => {
   };
 
   const loadTailorItemPrices = async () => {
-    if (!initialBusinessInfo?.id) return;
+    const businessId = initialBusinessInfo?.id || initialBusinessInfo?.businessId;
+    if (!businessId) return;
 
     try {
-      const response = await getTailorItemPrices(initialBusinessInfo.id);
+      // First check if we have tailorItemPrices in the initial response
+      if (initialBusinessInfo?.tailorItemPrices && Array.isArray(initialBusinessInfo.tailorItemPrices)) {
+        const data = initialBusinessInfo.tailorItemPrices;
+        console.log('✅ Using tailorItemPrices from initial response:', data.length);
+        
+        // Map prices to category details
+        const detailsMap: Record<string, CategoryDetail> = {};
+        const categoriesToSelect: string[] = [];
+        
+        data.forEach((itemPrice: any) => {
+          // Find category name from ItemId
+          const categoryObj = tailoringCategoryObjects.find((cat) => {
+            const catId = cat.ItemId || cat.itemId || cat.id;
+            return catId === itemPrice.ItemId || catId === itemPrice.itemId;
+          });
+          
+          if (categoryObj) {
+            const categoryName = categoryObj.Name || categoryObj.name || categoryObj.categoryName || categoryObj.itemName || String(categoryObj);
+            
+            detailsMap[categoryName] = {
+              ItemId: itemPrice.ItemId || itemPrice.itemId || categoryObj.ItemId || categoryObj.itemId || categoryObj.id || null,
+              FullPrice: itemPrice.FullPrice?.toString() || itemPrice.fullPrice?.toString() || '',
+              DiscountPrice: itemPrice.DiscountPrice?.toString() || itemPrice.discountPrice?.toString() || '',
+              DiscountType: itemPrice.DiscountType || itemPrice.discountType || '',
+              DiscountValue: itemPrice.DiscountValue?.toString() || itemPrice.discountValue?.toString() || '',
+              EstimatedDays: itemPrice.EstimatedDays?.toString() || itemPrice.estimatedDays?.toString() || '',
+              IsAvailable: itemPrice.IsAvailable !== false && itemPrice.isAvailable !== false,
+              Notes: itemPrice.Notes || itemPrice.notes || '',
+            };
+            
+            if (!categoriesToSelect.includes(categoryName)) {
+              categoriesToSelect.push(categoryName);
+            }
+          }
+        });
+        
+        // Update selected categories if not already set
+        if (categoriesToSelect.length > 0 && selectedTailoringCategories.length === 0) {
+          setSelectedTailoringCategories(categoriesToSelect);
+        }
+        
+        setCategoryDetails(detailsMap);
+        console.log('✅ Preloaded category details from response:', Object.keys(detailsMap).length);
+        return;
+      }
+      
+      // Fallback: fetch from API
+      const response = await getTailorItemPrices(businessId);
       const data = response.data?.data || response.data?.itemPrices || response.data?.items || response.data || [];
       
       if (Array.isArray(data) && data.length > 0) {
-        console.log('✅ Loaded tailor item prices:', data.length);
+        console.log('✅ Loaded tailor item prices from API:', data.length);
         
         // Map prices to category details
         const detailsMap: Record<string, CategoryDetail> = {};
@@ -214,7 +372,7 @@ const BusinessInfoEdit: React.FC = () => {
         });
         
         setCategoryDetails(detailsMap);
-        console.log('✅ Preloaded category details:', Object.keys(detailsMap).length);
+        console.log('✅ Preloaded category details from API:', Object.keys(detailsMap).length);
       }
     } catch (error: any) {
       console.error('Error loading tailor item prices:', error);
@@ -288,6 +446,203 @@ const BusinessInfoEdit: React.FC = () => {
         [field]: value,
       },
     }));
+  };
+
+  // Time picker handlers
+  const handleTimeSelect = (hours: number, minutes: number, isOpening: boolean) => {
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
+    const timeStr = `${displayHours}:${minutesStr} ${ampm}`;
+    
+    if (isOpening) {
+      setOpeningTime(timeStr);
+      setShowOpeningTimePicker(false);
+    } else {
+      setClosingTime(timeStr);
+      setShowClosingTimePicker(false);
+    }
+  };
+
+  // Initialize picker values when opening
+  useEffect(() => {
+    if (showOpeningTimePicker || showClosingTimePicker) {
+      const timeStr = showOpeningTimePicker ? openingTime : closingTime;
+      if (timeStr) {
+        const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (match) {
+          let hour = parseInt(match[1], 10);
+          const minute = parseInt(match[2], 10);
+          const ampm = match[3].toUpperCase();
+          
+          setPickerIsAM(ampm === 'AM');
+          if (ampm === 'PM' && hour !== 12) hour -= 12;
+          if (ampm === 'AM' && hour === 12) hour = 12;
+          setPickerHour(hour);
+          setPickerMinute(minute);
+        }
+      }
+    }
+  }, [showOpeningTimePicker, showClosingTimePicker]);
+
+  // Simple time picker component
+  const renderTimePicker = (isOpening: boolean) => {
+    const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+    const minutes = Array.from({ length: 60 }, (_, i) => i).filter((m) => m % 5 === 0);
+
+    return (
+      <Modal
+        visible={isOpening ? showOpeningTimePicker : showClosingTimePicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          if (isOpening) setShowOpeningTimePicker(false);
+          else setShowClosingTimePicker(false);
+        }}
+      >
+        <View style={styles.timePickerOverlay}>
+          <View style={styles.timePickerContainer}>
+            <View style={styles.timePickerHeader}>
+              <Text style={styles.timePickerTitle}>
+                Select {isOpening ? 'Opening' : 'Closing'} Time
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  if (isOpening) setShowOpeningTimePicker(false);
+                  else setShowClosingTimePicker(false);
+                }}
+              >
+                <Icon name="close" size={24} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.timePickerContent}>
+              {/* Hour Picker */}
+              <View style={styles.pickerColumn}>
+                <Text style={styles.pickerLabel}>Hour</Text>
+                <ScrollView 
+                  style={styles.pickerScroll} 
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.pickerScrollContent}
+                >
+                  {hours.map((hour) => (
+                    <TouchableOpacity
+                      key={hour}
+                      onPress={() => setPickerHour(hour)}
+                      style={[
+                        styles.pickerItem,
+                        pickerHour === hour && styles.pickerItemSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pickerItemText,
+                          pickerHour === hour && styles.pickerItemTextSelected,
+                        ]}
+                      >
+                        {hour}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Minute Picker */}
+              <View style={styles.pickerColumn}>
+                <Text style={styles.pickerLabel}>Minute</Text>
+                <ScrollView 
+                  style={styles.pickerScroll} 
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.pickerScrollContent}
+                >
+                  {minutes.map((minute) => (
+                    <TouchableOpacity
+                      key={minute}
+                      onPress={() => setPickerMinute(minute)}
+                      style={[
+                        styles.pickerItem,
+                        pickerMinute === minute && styles.pickerItemSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pickerItemText,
+                          pickerMinute === minute && styles.pickerItemTextSelected,
+                        ]}
+                      >
+                        {minute < 10 ? `0${minute}` : minute}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* AM/PM Toggle */}
+              <View style={styles.pickerColumn}>
+                <Text style={styles.pickerLabel}>Period</Text>
+                <View style={styles.ampmContainer}>
+                  <TouchableOpacity
+                    onPress={() => setPickerIsAM(true)}
+                    style={[
+                      styles.ampmButton,
+                      pickerIsAM && styles.ampmButtonSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.ampmButtonText,
+                        pickerIsAM && styles.ampmButtonTextSelected,
+                      ]}
+                    >
+                      AM
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setPickerIsAM(false)}
+                    style={[
+                      styles.ampmButton,
+                      !pickerIsAM && styles.ampmButtonSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.ampmButtonText,
+                        !pickerIsAM && styles.ampmButtonTextSelected,
+                      ]}
+                    >
+                      PM
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.timePickerFooter}>
+              <TouchableOpacity
+                style={styles.timePickerCancelButton}
+                onPress={() => {
+                  if (isOpening) setShowOpeningTimePicker(false);
+                  else setShowClosingTimePicker(false);
+                }}
+              >
+                <Text style={styles.timePickerCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.timePickerConfirmButton}
+                onPress={() => {
+                  const hours24 = pickerIsAM 
+                    ? (pickerHour === 12 ? 0 : pickerHour) 
+                    : (pickerHour === 12 ? 12 : pickerHour + 12);
+                  handleTimeSelect(hours24, pickerMinute, isOpening);
+                }}
+              >
+                <Text style={styles.timePickerConfirmText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
   };
 
   const handleLogoPick = () => {
@@ -382,8 +737,8 @@ const BusinessInfoEdit: React.FC = () => {
         googleMapLink: googleMapLink.trim(),
         gpsLatitude: gpsLatitude.trim(),
         gpsLongitude: gpsLongitude.trim(),
-        openingTime: openingTime.trim(),
-        closingTime: closingTime.trim(),
+        openingTime: convertTimeToISO(openingTime.trim()),
+        closingTime: convertTimeToISO(closingTime.trim()),
         weeklyOff: weeklyOff.trim(),
         businessLogo: logoBase64 || logoUri || '',
         specialization: specialization.trim(),
@@ -396,8 +751,8 @@ const BusinessInfoEdit: React.FC = () => {
         payload.serviceTypes = JSON.stringify(selectedServices);
         payload.tailoringCategories = JSON.stringify(selectedTailoringCategories);
       }
-
-      const businessId = initialBusinessInfo?.id || initialBusinessInfo?.businessId;
+console.log('initialBusinessInfo', initialBusinessInfo);
+      const businessId = initialBusinessInfo?.id || initialBusinessInfo?.businessId || initialBusinessInfo?.BusinessId;
       const response = await updateBusinessInfo(payload, businessId);
       console.log('✅ Business info updated:', response?.data);
 
@@ -555,6 +910,7 @@ const BusinessInfoEdit: React.FC = () => {
               placeholder="Main phone number"
               keyboardType="phone-pad"
               placeholderTextColor={Colors.inputPlaceholder}
+              maxLength={10}
             />
             {errors.mobileNumber && <Text style={styles.errorText}>{errors.mobileNumber}</Text>}
 
@@ -566,6 +922,7 @@ const BusinessInfoEdit: React.FC = () => {
               placeholder="Alternate contact number"
               keyboardType="phone-pad"
               placeholderTextColor={Colors.inputPlaceholder}
+              maxLength={10}
             />
 
             <Text style={styles.fieldLabel}>Working City *</Text>
@@ -881,25 +1238,33 @@ const BusinessInfoEdit: React.FC = () => {
             <View style={styles.row}>
               <View style={styles.rowItem}>
                 <Text style={styles.fieldLabel}>Opening Time</Text>
-                <TextInput
-                  value={openingTime}
-                  onChangeText={setOpeningTime}
-                  style={styles.input}
-                  placeholder="e.g., 10:00 AM"
-                  placeholderTextColor={Colors.inputPlaceholder}
-                />
+                <TouchableOpacity
+                  onPress={() => setShowOpeningTimePicker(true)}
+                  style={styles.timeInputButton}
+                >
+                  <Text style={[styles.timeInputText, !openingTime && styles.timeInputPlaceholder]}>
+                    {openingTime || 'e.g., 10:00 AM'}
+                  </Text>
+                  <Icon name="time-outline" size={20} color={Colors.warmBrownColor} />
+                </TouchableOpacity>
               </View>
               <View style={styles.rowItem}>
                 <Text style={styles.fieldLabel}>Closing Time</Text>
-                <TextInput
-                  value={closingTime}
-                  onChangeText={setClosingTime}
-                  style={styles.input}
-                  placeholder="e.g., 9:00 PM"
-                  placeholderTextColor={Colors.inputPlaceholder}
-                />
+                <TouchableOpacity
+                  onPress={() => setShowClosingTimePicker(true)}
+                  style={styles.timeInputButton}
+                >
+                  <Text style={[styles.timeInputText, !closingTime && styles.timeInputPlaceholder]}>
+                    {closingTime || 'e.g., 9:00 PM'}
+                  </Text>
+                  <Icon name="time-outline" size={20} color={Colors.warmBrownColor} />
+                </TouchableOpacity>
               </View>
             </View>
+            
+            {/* Time Pickers */}
+            {renderTimePicker(true)}
+            {renderTimePicker(false)}
 
             <Text style={styles.fieldLabel}>Weekly Off</Text>
             <TextInput
@@ -955,18 +1320,20 @@ const BusinessInfoEdit: React.FC = () => {
               multiline
               numberOfLines={3}
             />
+              <View style={styles.saveButtonContainer}>
+            <CustomButton
+              title="Save Changes"
+              onPress={handleSave}
+              loading={saving}
+              disabled={saving}
+              style={styles.saveButton}
+              size="large"
+            />
           </View>
-        </ScrollView>
+          </View>
 
-        {/* Bottom actions */}
-        <View style={[styles.bottomBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 16 }]}>
-          <CustomButton
-            title="Save Changes"
-            onPress={handleSave}
-            loading={saving}
-            style={styles.saveButton}
-          />
-        </View>
+        
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -1010,10 +1377,11 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    flexGrow: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 40, // Padding at bottom for comfortable scrolling
   },
   section: {
     marginTop: 24,
@@ -1183,15 +1551,161 @@ const styles = StyleSheet.create({
     color: Colors.warmBrownColor,
     fontFamily: GILROY_SEMIBOLD,
   },
-  bottomBar: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    backgroundColor: Colors.whiteColor,
+  saveButtonContainer: {
+    marginTop: 32,
+    marginBottom: 70,
+    paddingHorizontal: 0,
   },
   saveButton: {
     backgroundColor: Colors.warmBrownColor,
+    width: '100%',
+    borderRadius: 12,
+    paddingVertical: 16,
+  },
+  timeInputButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    backgroundColor: Colors.inputBackground,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  timeInputText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_REGULAR,
+    flex: 1,
+  },
+  timeInputPlaceholder: {
+    color: Colors.inputPlaceholder,
+  },
+  timePickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  timePickerContainer: {
+    backgroundColor: Colors.whiteColor,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+    maxHeight: '70%',
+  },
+  timePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  timePickerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    fontFamily: GILROY_BOLD,
+  },
+  timePickerContent: {
+    flexDirection: 'row',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    justifyContent: 'space-around',
+  },
+  pickerColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  pickerLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontFamily: GILROY_MEDIUM,
+    marginBottom: 10,
+  },
+  pickerScroll: {
+    maxHeight: 200,
+    width: '100%',
+  },
+  pickerScrollContent: {
+    alignItems: 'center',
+  },
+  pickerItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginVertical: 2,
+  },
+  pickerItemSelected: {
+    backgroundColor: Colors.warmBrownColor,
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_REGULAR,
+  },
+  pickerItemTextSelected: {
+    color: Colors.whiteColor,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  ampmContainer: {
+    gap: 8,
+  },
+  ampmButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.inputBorderColor,
+    backgroundColor: Colors.whiteColor,
+    alignItems: 'center',
+  },
+  ampmButtonSelected: {
+    backgroundColor: Colors.warmBrownColor,
+    borderColor: Colors.warmBrownColor,
+  },
+  ampmButtonText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  ampmButtonTextSelected: {
+    color: Colors.whiteColor,
+  },
+  timePickerFooter: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 12,
+    marginTop: 10,
+  },
+  timePickerCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    backgroundColor: Colors.whiteColor,
+    alignItems: 'center',
+  },
+  timePickerCancelText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  timePickerConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.warmBrownColor,
+    alignItems: 'center',
+  },
+  timePickerConfirmText: {
+    fontSize: 16,
+    color: Colors.whiteColor,
+    fontFamily: GILROY_SEMIBOLD,
   },
 });
 

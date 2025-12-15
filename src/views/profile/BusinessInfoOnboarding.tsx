@@ -11,6 +11,7 @@ import {
   Image,
   Alert,
   Switch,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -134,6 +135,11 @@ const BusinessInfoOnboarding: React.FC = () => {
   const [openingTime, setOpeningTime] = useState('');
   const [closingTime, setClosingTime] = useState('');
   const [weeklyOff, setWeeklyOff] = useState('');
+  const [showOpeningTimePicker, setShowOpeningTimePicker] = useState(false);
+  const [showClosingTimePicker, setShowClosingTimePicker] = useState(false);
+  const [pickerHour, setPickerHour] = useState(9);
+  const [pickerMinute, setPickerMinute] = useState(0);
+  const [pickerIsAM, setPickerIsAM] = useState(true);
 
   // Form state
   const [currentStep, setCurrentStep] = useState(0);
@@ -188,9 +194,18 @@ const BusinessInfoOnboarding: React.FC = () => {
   };
 
   const handleServiceToggle = (service: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
-    );
+    setSelectedServices((prev) => {
+      const newServices = prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service];
+      // Clear error if services are selected
+      if (newServices.length > 0 && errors.serviceTypes) {
+        setErrors((prevErrors) => {
+          const newErrors = { ...prevErrors };
+          delete newErrors.serviceTypes;
+          return newErrors;
+        });
+      }
+      return newServices;
+    });
   };
 
   const handleCategoryToggle = (category: string) => {
@@ -198,7 +213,18 @@ const BusinessInfoOnboarding: React.FC = () => {
     
     if (isSelected) {
       // Remove category
-      setSelectedTailoringCategories((prev) => prev.filter((c) => c !== category));
+      setSelectedTailoringCategories((prev) => {
+        const newCategories = prev.filter((c) => c !== category);
+        // Clear error if categories are still selected
+        if (newCategories.length > 0 && errors.tailoringCategories) {
+          setErrors((prevErrors) => {
+            const newErrors = { ...prevErrors };
+            delete newErrors.tailoringCategories;
+            return newErrors;
+          });
+        }
+        return newCategories;
+      });
       setCategoryDetails((prev) => {
         const updated = { ...prev };
         delete updated[category];
@@ -210,9 +236,27 @@ const BusinessInfoOnboarding: React.FC = () => {
         updated.delete(category);
         return updated;
       });
+      // Clear category-specific errors
+      setErrors((prevErrors) => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[`category_${category}_FullPrice`];
+        delete newErrors[`category_${category}_EstimatedDays`];
+        return newErrors;
+      });
     } else {
       // Add category
-      setSelectedTailoringCategories((prev) => [...prev, category]);
+      setSelectedTailoringCategories((prev) => {
+        const newCategories = [...prev, category];
+        // Clear error if categories are selected
+        if (newCategories.length > 0 && errors.tailoringCategories) {
+          setErrors((prevErrors) => {
+            const newErrors = { ...prevErrors };
+            delete newErrors.tailoringCategories;
+            return newErrors;
+          });
+        }
+        return newCategories;
+      });
       
       // Find ItemId for this category
       const categoryObj = tailoringCategoryObjects.find((cat) => {
@@ -260,6 +304,228 @@ const BusinessInfoOnboarding: React.FC = () => {
     }));
   };
 
+  // Helper function to convert readable time to ISO format for backend
+  const convertTimeToISO = (timeStr: string): string => {
+    if (!timeStr) return '';
+    try {
+      // Parse format like "10:00 AM" or "9:00 PM"
+      const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!match) return timeStr; // Return as-is if format doesn't match
+      
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const ampm = match[3].toUpperCase();
+      
+      if (ampm === 'PM' && hours !== 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      
+      // Create a date with the time (using epoch date as base)
+      const date = new Date('1970-01-01T00:00:00.000Z');
+      date.setUTCHours(hours, minutes, 0, 0);
+      return date.toISOString();
+    } catch (e) {
+      console.error('Error converting time to ISO:', e);
+      return timeStr;
+    }
+  };
+
+  // Time picker handlers
+  const handleTimeSelect = (hours: number, minutes: number, isOpening: boolean) => {
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
+    const timeStr = `${displayHours}:${minutesStr} ${ampm}`;
+    
+    if (isOpening) {
+      setOpeningTime(timeStr);
+      setShowOpeningTimePicker(false);
+    } else {
+      setClosingTime(timeStr);
+      setShowClosingTimePicker(false);
+    }
+  };
+
+  // Initialize picker values when opening
+  useEffect(() => {
+    if (showOpeningTimePicker || showClosingTimePicker) {
+      const timeStr = showOpeningTimePicker ? openingTime : closingTime;
+      if (timeStr) {
+        const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (match) {
+          let hour = parseInt(match[1], 10);
+          const minute = parseInt(match[2], 10);
+          const ampm = match[3].toUpperCase();
+          
+          setPickerIsAM(ampm === 'AM');
+          if (ampm === 'PM' && hour !== 12) hour -= 12;
+          if (ampm === 'AM' && hour === 12) hour = 12;
+          setPickerHour(hour);
+          setPickerMinute(minute);
+        }
+      }
+    }
+  }, [showOpeningTimePicker, showClosingTimePicker]);
+
+  // Simple time picker component
+  const renderTimePicker = (isOpening: boolean) => {
+    const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+    const minutes = Array.from({ length: 60 }, (_, i) => i).filter((m) => m % 5 === 0);
+
+    return (
+      <Modal
+        visible={isOpening ? showOpeningTimePicker : showClosingTimePicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          if (isOpening) setShowOpeningTimePicker(false);
+          else setShowClosingTimePicker(false);
+        }}
+      >
+        <View style={styles.timePickerOverlay}>
+          <View style={styles.timePickerContainer}>
+            <View style={styles.timePickerHeader}>
+              <Text style={styles.timePickerTitle}>
+                Select {isOpening ? 'Opening' : 'Closing'} Time
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  if (isOpening) setShowOpeningTimePicker(false);
+                  else setShowClosingTimePicker(false);
+                }}
+              >
+                <Icon name="close" size={24} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.timePickerContent}>
+              {/* Hour Picker */}
+              <View style={styles.pickerColumn}>
+                <Text style={styles.pickerLabel}>Hour</Text>
+                <ScrollView 
+                  style={styles.pickerScroll} 
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.pickerScrollContent}
+                >
+                  {hours.map((hour) => (
+                    <TouchableOpacity
+                      key={hour}
+                      onPress={() => setPickerHour(hour)}
+                      style={[
+                        styles.pickerItem,
+                        pickerHour === hour && styles.pickerItemSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pickerItemText,
+                          pickerHour === hour && styles.pickerItemTextSelected,
+                        ]}
+                      >
+                        {hour}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Minute Picker */}
+              <View style={styles.pickerColumn}>
+                <Text style={styles.pickerLabel}>Minute</Text>
+                <ScrollView 
+                  style={styles.pickerScroll} 
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.pickerScrollContent}
+                >
+                  {minutes.map((minute) => (
+                    <TouchableOpacity
+                      key={minute}
+                      onPress={() => setPickerMinute(minute)}
+                      style={[
+                        styles.pickerItem,
+                        pickerMinute === minute && styles.pickerItemSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pickerItemText,
+                          pickerMinute === minute && styles.pickerItemTextSelected,
+                        ]}
+                      >
+                        {minute < 10 ? `0${minute}` : minute}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* AM/PM Toggle */}
+              <View style={styles.pickerColumn}>
+                <Text style={styles.pickerLabel}>Period</Text>
+                <View style={styles.ampmContainer}>
+                  <TouchableOpacity
+                    onPress={() => setPickerIsAM(true)}
+                    style={[
+                      styles.ampmButton,
+                      pickerIsAM && styles.ampmButtonSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.ampmButtonText,
+                        pickerIsAM && styles.ampmButtonTextSelected,
+                      ]}
+                    >
+                      AM
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setPickerIsAM(false)}
+                    style={[
+                      styles.ampmButton,
+                      !pickerIsAM && styles.ampmButtonSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.ampmButtonText,
+                        !pickerIsAM && styles.ampmButtonTextSelected,
+                      ]}
+                    >
+                      PM
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.timePickerFooter}>
+              <TouchableOpacity
+                style={styles.timePickerCancelButton}
+                onPress={() => {
+                  if (isOpening) setShowOpeningTimePicker(false);
+                  else setShowClosingTimePicker(false);
+                }}
+              >
+                <Text style={styles.timePickerCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.timePickerConfirmButton}
+                onPress={() => {
+                  const hours24 = pickerIsAM 
+                    ? (pickerHour === 12 ? 0 : pickerHour) 
+                    : (pickerHour === 12 ? 12 : pickerHour + 12);
+                  handleTimeSelect(hours24, pickerMinute, isOpening);
+                }}
+              >
+                <Text style={styles.timePickerConfirmText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   const handleLogoPick = () => {
     launchImageLibrary(
       {
@@ -286,6 +552,85 @@ const BusinessInfoOnboarding: React.FC = () => {
     );
   };
 
+  // Step-specific validation functions
+  const validateOwnerStep = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!businessName.trim()) {
+      newErrors.businessName = 'Business name is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateContactStep = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!mobileNumber.trim()) {
+      newErrors.mobileNumber = 'Mobile number is required';
+    } else if (mobileNumber.length < 10) {
+      newErrors.mobileNumber = 'Mobile number must be 10 digits';
+    }
+    
+    if (!workingCity.trim()) {
+      newErrors.workingCity = 'Working city is required';
+    }
+    
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Enter a valid email address';
+    }
+    
+    // GPS validation
+    if (gpsLatitude && (isNaN(Number(gpsLatitude)) || Number(gpsLatitude) < -90 || Number(gpsLatitude) > 90)) {
+      newErrors.gpsLatitude = 'Latitude must be between -90 and 90';
+    }
+    if (gpsLongitude && (isNaN(Number(gpsLongitude)) || Number(gpsLongitude) < -180 || Number(gpsLongitude) > 180)) {
+      newErrors.gpsLongitude = 'Longitude must be between -180 and 180';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateServicesStep = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    // Tailor-specific validation
+    if (isTailorRole) {
+      if (selectedServices.length === 0) {
+        newErrors.serviceTypes = 'Please select at least one service';
+      }
+      if (selectedTailoringCategories.length === 0) {
+        newErrors.tailoringCategories = 'Please select at least one tailoring category';
+      }
+      
+      // Validate category details
+      selectedTailoringCategories.forEach((category) => {
+        const details = categoryDetails[category];
+        if (!details?.FullPrice || details.FullPrice === '') {
+          newErrors[`category_${category}_FullPrice`] = `${category}: Full Price is required`;
+        }
+        if (!details?.EstimatedDays || details.EstimatedDays === '') {
+          newErrors[`category_${category}_EstimatedDays`] = `${category}: Estimated Days is required`;
+        }
+      });
+    }
+    
+    // Years of experience validation
+    if (yearsOfExperience && (isNaN(Number(yearsOfExperience)) || Number(yearsOfExperience) < 0)) {
+      newErrors.yearsOfExperience = 'Please enter a valid number';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateBrandingStep = (): boolean => {
+    // No required fields in branding step
+    return true;
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -295,8 +640,8 @@ const BusinessInfoOnboarding: React.FC = () => {
     }
     if (!mobileNumber.trim()) {
       newErrors.mobileNumber = 'Mobile number is required';
-    } else if (!/^[\+]?[1-9][\d]{9,15}$/.test(mobileNumber.replace(/\s/g, ''))) {
-      newErrors.mobileNumber = 'Enter a valid mobile number';
+    } else if (mobileNumber.length < 10) {
+      newErrors.mobileNumber = 'Mobile number must be 10 digits';
     }
     if (!workingCity.trim()) {
       newErrors.workingCity = 'Working city is required';
@@ -344,6 +689,34 @@ const BusinessInfoOnboarding: React.FC = () => {
   };
 
   const handleNext = () => {
+    // Validate current step before proceeding
+    let isValid = false;
+    
+    switch (activeStep.key) {
+      case 'owner':
+        isValid = validateOwnerStep();
+        break;
+      case 'contact':
+        isValid = validateContactStep();
+        break;
+      case 'services':
+        isValid = validateServicesStep();
+        break;
+      case 'branding':
+        isValid = validateBrandingStep();
+        break;
+      default:
+        isValid = true;
+    }
+    
+    if (!isValid) {
+      // Scroll to top to show errors
+      return;
+    }
+    
+    // Clear errors when moving to next step
+    setErrors({});
+    
     if (currentStep < totalSteps - 1) {
       setCurrentStep((prev) => prev + 1);
     }
@@ -420,8 +793,8 @@ const BusinessInfoOnboarding: React.FC = () => {
       businessInfo.googleMapLink = googleMapLink.trim();
       businessInfo.gpsLatitude = gpsLatitude.trim();
       businessInfo.gpsLongitude = gpsLongitude.trim();
-      businessInfo.openingTime = openingTime.trim();
-      businessInfo.closingTime = closingTime.trim();
+      businessInfo.openingTime = convertTimeToISO(openingTime.trim());
+      businessInfo.closingTime = convertTimeToISO(closingTime.trim());
       businessInfo.weeklyOff = weeklyOff.trim();
       businessInfo.businessLogo = logoBase64 || logoUri || '';
 
@@ -527,12 +900,12 @@ const BusinessInfoOnboarding: React.FC = () => {
         ],
       });
     } catch (error: any) {
-      console.error('❌ Signup failed:', error?.response?.data || error?.message || error);
+      console.error('❌ Signup failed:', error.response.data.errors[0].message);
       const errorMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        'Failed to create account. Please try again.';
+      error.response.data.errors[0].message ||
+      error?.response?.data?.message ||
+      'Failed to create business account. Please try again.';
+       
       showErrorMessage('Signup Failed', errorMessage);
     } finally {
       setSaving(false);
@@ -554,7 +927,16 @@ const BusinessInfoOnboarding: React.FC = () => {
       <Text style={styles.fieldLabel}>Business name *</Text>
       <TextInput
         value={businessName}
-        onChangeText={setBusinessName}
+        onChangeText={(text) => {
+          setBusinessName(text);
+          if (errors.businessName) {
+            setErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.businessName;
+              return newErrors;
+            });
+          }
+        }}
         style={[styles.input, errors.businessName && styles.inputError]}
         placeholder="Shop or brand name customers will see"
         placeholderTextColor={Colors.inputPlaceholder}
@@ -594,7 +976,16 @@ const BusinessInfoOnboarding: React.FC = () => {
       <Text style={styles.fieldLabel}>Business email</Text>
       <TextInput
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => {
+          setEmail(text);
+          if (errors.email) {
+            setErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.email;
+              return newErrors;
+            });
+          }
+        }}
         style={[styles.input, errors.email && styles.inputError]}
         placeholder="Contact email for customers"
         keyboardType="email-address"
@@ -605,11 +996,21 @@ const BusinessInfoOnboarding: React.FC = () => {
       <Text style={styles.fieldLabel}>Primary mobile number *</Text>
       <TextInput
         value={mobileNumber}
-        onChangeText={setMobileNumber}
+        onChangeText={(text) => {
+          setMobileNumber(text);
+          if (errors.mobileNumber) {
+            setErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.mobileNumber;
+              return newErrors;
+            });
+          }
+        }}
         style={[styles.input, errors.mobileNumber && styles.inputError]}
         placeholder="Main phone number"
         keyboardType="phone-pad"
         placeholderTextColor={Colors.inputPlaceholder}
+        maxLength={10}
       />
       {errors.mobileNumber && <Text style={styles.errorText}>{errors.mobileNumber}</Text>}
 
@@ -621,12 +1022,22 @@ const BusinessInfoOnboarding: React.FC = () => {
         placeholder="Optional alternate contact number"
         keyboardType="phone-pad"
         placeholderTextColor={Colors.inputPlaceholder}
+        maxLength={10}
       />
 
       <Text style={styles.fieldLabel}>Working city *</Text>
       <TextInput
         value={workingCity}
-        onChangeText={setWorkingCity}
+        onChangeText={(text) => {
+          setWorkingCity(text);
+          if (errors.workingCity) {
+            setErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.workingCity;
+              return newErrors;
+            });
+          }
+        }}
         style={[styles.input, errors.workingCity && styles.inputError]}
         placeholder="City where you mainly serve customers"
         placeholderTextColor={Colors.inputPlaceholder}
@@ -653,32 +1064,50 @@ const BusinessInfoOnboarding: React.FC = () => {
         placeholderTextColor={Colors.inputPlaceholder}
       />
 
-      <View style={styles.row}>
-        <View style={styles.rowItem}>
-          <Text style={styles.fieldLabel}>GPS latitude</Text>
-          <TextInput
-            value={gpsLatitude}
-            onChangeText={setGpsLatitude}
-            style={[styles.input, errors.gpsLatitude && styles.inputError]}
-            placeholder="e.g., 19.0760"
-            keyboardType="decimal-pad"
-            placeholderTextColor={Colors.inputPlaceholder}
-          />
-          {errors.gpsLatitude && <Text style={styles.errorText}>{errors.gpsLatitude}</Text>}
-        </View>
-        <View style={styles.rowItem}>
-          <Text style={styles.fieldLabel}>GPS longitude</Text>
-          <TextInput
-            value={gpsLongitude}
-            onChangeText={setGpsLongitude}
-            style={[styles.input, errors.gpsLongitude && styles.inputError]}
-            placeholder="e.g., 72.8777"
-            keyboardType="decimal-pad"
-            placeholderTextColor={Colors.inputPlaceholder}
-          />
-          {errors.gpsLongitude && <Text style={styles.errorText}>{errors.gpsLongitude}</Text>}
-        </View>
-      </View>
+          <View style={styles.row}>
+            <View style={styles.rowItem}>
+              <Text style={styles.fieldLabel}>GPS latitude</Text>
+              <TextInput
+                value={gpsLatitude}
+                onChangeText={(text) => {
+                  setGpsLatitude(text);
+                  if (errors.gpsLatitude) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.gpsLatitude;
+                      return newErrors;
+                    });
+                  }
+                }}
+                style={[styles.input, errors.gpsLatitude && styles.inputError]}
+                placeholder="e.g., 19.0760"
+                keyboardType="decimal-pad"
+                placeholderTextColor={Colors.inputPlaceholder}
+              />
+              {errors.gpsLatitude && <Text style={styles.errorText}>{errors.gpsLatitude}</Text>}
+            </View>
+            <View style={styles.rowItem}>
+              <Text style={styles.fieldLabel}>GPS longitude</Text>
+              <TextInput
+                value={gpsLongitude}
+                onChangeText={(text) => {
+                  setGpsLongitude(text);
+                  if (errors.gpsLongitude) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.gpsLongitude;
+                      return newErrors;
+                    });
+                  }
+                }}
+                style={[styles.input, errors.gpsLongitude && styles.inputError]}
+                placeholder="e.g., 72.8777"
+                keyboardType="decimal-pad"
+                placeholderTextColor={Colors.inputPlaceholder}
+              />
+              {errors.gpsLongitude && <Text style={styles.errorText}>{errors.gpsLongitude}</Text>}
+            </View>
+          </View>
     </View>
   );
 
@@ -777,7 +1206,17 @@ const BusinessInfoOnboarding: React.FC = () => {
                         <Text style={styles.detailLabel}>Full Price *</Text>
                         <TextInput
                           value={details.FullPrice || ''}
-                          onChangeText={(value) => handleCategoryDetailChange(categoryName, 'FullPrice', value)}
+                          onChangeText={(value) => {
+                            handleCategoryDetailChange(categoryName, 'FullPrice', value);
+                            const errorKey = `category_${categoryName}_FullPrice`;
+                            if (errors[errorKey]) {
+                              setErrors((prev) => {
+                                const newErrors = { ...prev };
+                                delete newErrors[errorKey];
+                                return newErrors;
+                              });
+                            }
+                          }}
                           style={[
                             styles.input,
                             errors[`category_${categoryName}_FullPrice`] && styles.inputError,
@@ -794,7 +1233,17 @@ const BusinessInfoOnboarding: React.FC = () => {
                         <Text style={styles.detailLabel}>Estimated Days *</Text>
                         <TextInput
                           value={details.EstimatedDays || ''}
-                          onChangeText={(value) => handleCategoryDetailChange(categoryName, 'EstimatedDays', value)}
+                          onChangeText={(value) => {
+                            handleCategoryDetailChange(categoryName, 'EstimatedDays', value);
+                            const errorKey = `category_${categoryName}_EstimatedDays`;
+                            if (errors[errorKey]) {
+                              setErrors((prev) => {
+                                const newErrors = { ...prev };
+                                delete newErrors[errorKey];
+                                return newErrors;
+                              });
+                            }
+                          }}
                           style={[
                             styles.input,
                             errors[`category_${categoryName}_EstimatedDays`] && styles.inputError,
@@ -893,7 +1342,16 @@ const BusinessInfoOnboarding: React.FC = () => {
       <Text style={styles.fieldLabel}>Years of experience</Text>
       <TextInput
         value={yearsOfExperience}
-        onChangeText={setYearsOfExperience}
+        onChangeText={(text) => {
+          setYearsOfExperience(text);
+          if (errors.yearsOfExperience) {
+            setErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.yearsOfExperience;
+              return newErrors;
+            });
+          }
+        }}
         style={[styles.input, errors.yearsOfExperience && styles.inputError]}
         placeholder="Total years in this business"
         keyboardType="number-pad"
@@ -930,25 +1388,33 @@ const BusinessInfoOnboarding: React.FC = () => {
       <View style={styles.row}>
         <View style={styles.rowItem}>
           <Text style={styles.fieldLabel}>Opening time</Text>
-          <TextInput
-            value={openingTime}
-            onChangeText={setOpeningTime}
-            style={styles.input}
-            placeholder="e.g., 10:00 AM"
-            placeholderTextColor={Colors.inputPlaceholder}
-          />
+          <TouchableOpacity
+            onPress={() => setShowOpeningTimePicker(true)}
+            style={styles.timeInputButton}
+          >
+            <Text style={[styles.timeInputText, !openingTime && styles.timeInputPlaceholder]}>
+              {openingTime || 'e.g., 10:00 AM'}
+            </Text>
+            <Icon name="time-outline" size={20} color={Colors.warmBrownColor} />
+          </TouchableOpacity>
         </View>
         <View style={styles.rowItem}>
           <Text style={styles.fieldLabel}>Closing time</Text>
-          <TextInput
-            value={closingTime}
-            onChangeText={setClosingTime}
-            style={styles.input}
-            placeholder="e.g., 9:00 PM"
-            placeholderTextColor={Colors.inputPlaceholder}
-          />
+          <TouchableOpacity
+            onPress={() => setShowClosingTimePicker(true)}
+            style={styles.timeInputButton}
+          >
+            <Text style={[styles.timeInputText, !closingTime && styles.timeInputPlaceholder]}>
+              {closingTime || 'e.g., 9:00 PM'}
+            </Text>
+            <Icon name="time-outline" size={20} color={Colors.warmBrownColor} />
+          </TouchableOpacity>
         </View>
       </View>
+      
+      {/* Time Pickers */}
+      {renderTimePicker(true)}
+      {renderTimePicker(false)}
 
       <Text style={styles.fieldLabel}>Weekly off</Text>
       <TextInput
@@ -1033,7 +1499,8 @@ const BusinessInfoOnboarding: React.FC = () => {
             <CustomButton
               title={isLastStep ? 'Save & Continue' : 'Next'}
               onPress={isLastStep ? handleSave : handleNext}
-              loading={saving}
+              loading={isLastStep ? saving : false}
+              disabled={saving}
               style={styles.primaryButton}
             />
           </View>
@@ -1349,6 +1816,151 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     flex: 1.2,
+  },
+  timeInputButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    backgroundColor: Colors.inputBackground,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  timeInputText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_REGULAR,
+    flex: 1,
+  },
+  timeInputPlaceholder: {
+    color: Colors.inputPlaceholder,
+  },
+  timePickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  timePickerContainer: {
+    backgroundColor: Colors.whiteColor,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+    maxHeight: '70%',
+  },
+  timePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  timePickerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    fontFamily: GILROY_BOLD,
+  },
+  timePickerContent: {
+    flexDirection: 'row',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    justifyContent: 'space-around',
+  },
+  pickerColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  pickerLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontFamily: GILROY_MEDIUM,
+    marginBottom: 10,
+  },
+  pickerScroll: {
+    maxHeight: 200,
+    width: '100%',
+  },
+  pickerScrollContent: {
+    alignItems: 'center',
+  },
+  pickerItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginVertical: 2,
+  },
+  pickerItemSelected: {
+    backgroundColor: Colors.warmBrownColor,
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_REGULAR,
+  },
+  pickerItemTextSelected: {
+    color: Colors.whiteColor,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  ampmContainer: {
+    gap: 8,
+  },
+  ampmButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.inputBorderColor,
+    backgroundColor: Colors.whiteColor,
+    alignItems: 'center',
+  },
+  ampmButtonSelected: {
+    backgroundColor: Colors.warmBrownColor,
+    borderColor: Colors.warmBrownColor,
+  },
+  ampmButtonText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  ampmButtonTextSelected: {
+    color: Colors.whiteColor,
+  },
+  timePickerFooter: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 12,
+    marginTop: 10,
+  },
+  timePickerCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.inputBorderColor,
+    backgroundColor: Colors.whiteColor,
+    alignItems: 'center',
+  },
+  timePickerCancelText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  timePickerConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.warmBrownColor,
+    alignItems: 'center',
+  },
+  timePickerConfirmText: {
+    fontSize: 16,
+    color: Colors.whiteColor,
+    fontFamily: GILROY_SEMIBOLD,
   },
 });
 
