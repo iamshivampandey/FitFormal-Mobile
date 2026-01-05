@@ -105,6 +105,48 @@ export const getBusinessInfo = async (userId = null) => {
 };
 
 /**
+ * Get all tailors/businesses
+ * @param {Object} filters - Optional filters (businessType, city, state, etc.)
+ * @returns {Promise} Axios response with array of businesses
+ */
+export const getAllTailors = async (filters = {}) => {
+  try {
+    // Endpoint: GET /api/tailors
+    const endpoint = '/api/tailors';
+    const response = await AxiosConfig.get(endpoint, { params: filters });
+    
+    console.log('Get All Tailors API Response:', response?.data);
+    return response;
+  } catch (error) {
+    console.error('Get All Tailors API Error:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Get tailor details by business ID
+ * @param {number} businessId - Business ID of the tailor
+ * @returns {Promise} Axios response with tailor details
+ */
+export const getTailorDetails = async (businessId) => {
+  try {
+    if (!businessId) {
+      throw new Error('Business ID is required');
+    }
+
+    // Endpoint: GET /api/tailor/:businessId
+    const endpoint = `/api/tailor/${businessId}`;
+    const response = await AxiosConfig.get(endpoint);
+    
+    console.log('Get Tailor Details API Response:', JSON.stringify(response?.data));
+    return response;
+  } catch (error) {
+    console.error('Get Tailor Details API Error:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+/**
  * Update business info
  * @param {Object} payload - Business information payload
  * @param {number} businessId - Business ID (required)

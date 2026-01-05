@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../utils/colors';
 import * as Images from '../../utils/images';
 
@@ -35,6 +36,7 @@ interface Order {
 }
 
 const TailorDashboard: React.FC = () => {
+  const navigation = useNavigation();
   const [selectedTab, setSelectedTab] = useState<'overview' | 'bookings' | 'orders'>('overview');
   const insets = useSafeAreaInsets();
   const tabBarHeight = Platform.OS === 'ios' ? 65 + insets.bottom : 70;
@@ -291,9 +293,20 @@ const TailorDashboard: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.quickActionItem}>
+            <TouchableOpacity 
+              style={styles.quickActionItem}
+              onPress={() => {
+                // Navigate to Profile tab, then to OrderAvailability screen
+                const rootNavigation = navigation.getParent()?.getParent();
+                if (rootNavigation) {
+                  (rootNavigation as any).navigate('Profile', { screen: 'OrderAvailability' });
+                } else {
+                  (navigation as any).navigate('Profile', { screen: 'OrderAvailability' });
+                }
+              }}
+            >
               <Text style={styles.quickActionIcon}>📅</Text>
-              <Text style={styles.quickActionText}>My Schedule</Text>
+              <Text style={styles.quickActionText}>Order Availability</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionItem}>
               <Image source={Images.revenue_icon} style={styles.quickActionIconImage} />

@@ -23,7 +23,7 @@ AxiosConfig.interceptors.request.use(
       }
       
       // Log request for debugging (remove in production)
-      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      console.log(`API Request: ${JSON.stringify(config)}`);
       
       return config;
     } catch (error) {

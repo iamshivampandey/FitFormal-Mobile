@@ -10,6 +10,7 @@ import ProfileStackNavigation from './ProfileStackNavigation';
 import CartStackNavigation from './CartStackNavigation';
 import ShopStackNavigation from './ShopStackNavigation';
 import OrdersStackNavigation from './OrdersStackNavigation';
+import TailorsStackNavigation from './TailorsStackNavigation';
 
 export default function TabBarNavigation(): React.JSX.Element {
   const TabBar = createBottomTabNavigator();
@@ -58,6 +59,20 @@ export default function TabBarNavigation(): React.JSX.Element {
             tabBarIcon: ({ focused, size }) => (
               <Icon
                 name={focused ? 'home' : 'home-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Tailors"
+          component={TailorsStackNavigation}
+          options={{
+            tabBarLabel: 'Book Tailor',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'cut' : 'cut-outline'}
                 size={size}
                 color={focused ? Colors.warmBrownColor : Colors.grey}
               />
@@ -292,10 +307,24 @@ export default function TabBarNavigation(): React.JSX.Element {
         options={{
           tabBarIcon: ({ focused, size }) => (
             <Icon
-                name={focused ? 'person' : 'person-outline'}
-                size={size}
-                color={focused ? Colors.warmBrownColor : Colors.grey}
-              />
+              name={focused ? 'home' : 'home-outline'}
+              size={size}
+              color={focused ? Colors.warmBrownColor : Colors.grey}
+            />
+          ),
+        }}
+      />
+      <TabBar.Screen
+        name="Tailors"
+        component={TailorsStackNavigation}
+        options={{
+          tabBarLabel: 'Book Tailor',
+          tabBarIcon: ({ focused, size }) => (
+            <Icon
+              name={focused ? 'cut' : 'cut-outline'}
+              size={size}
+              color={focused ? Colors.warmBrownColor : Colors.grey}
+            />
           ),
         }}
       />
@@ -306,9 +335,9 @@ export default function TabBarNavigation(): React.JSX.Element {
           tabBarIcon: ({ focused, size }) => (
             <Icon
               name={focused ? 'cart' : 'cart-outline'}
-            size={size}
-            color={focused ? Colors.warmBrownColor : Colors.grey}
-          />
+              size={size}
+              color={focused ? Colors.warmBrownColor : Colors.grey}
+            />
           ),
         }}
       />
@@ -318,10 +347,10 @@ export default function TabBarNavigation(): React.JSX.Element {
         options={{
           tabBarIcon: ({ focused, size }) => (
             <Icon
-                name={focused ? 'person' : 'person-outline'}
-                size={size}
-                color={focused ? Colors.warmBrownColor : Colors.grey}
-              />
+              name={focused ? 'person' : 'person-outline'}
+              size={size}
+              color={focused ? Colors.warmBrownColor : Colors.grey}
+            />
           ),
         }}
       />

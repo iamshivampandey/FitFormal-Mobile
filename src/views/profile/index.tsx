@@ -646,6 +646,37 @@ export default function Profile({ navigation }: any): React.JSX.Element {
             </View>
           )}
 
+          {/* Order Availability - only for tailor role */}
+          {(userRole === 'tailor' || userRole === 'tailor_shop') && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardTitleContainer}>
+                  <View style={styles.cardIconCircle}>
+                    <Image source={Images.shopping_bag} style={styles.cardIconImage} />
+                  </View>
+                  <View>
+                    <Text style={styles.cardTitle}>Order Availability</Text>
+                    <Text style={styles.cardSubtitle}>
+                      Manage when you accept orders
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.actionItem}
+                onPress={() => navigation.navigate('OrderAvailability')}
+              >
+                <View style={styles.actionItemLeft}>
+                  <View style={styles.actionIconContainer}>
+                    <Image source={Images.shopping_bag} style={styles.actionIconImage} />
+                  </View>
+                  <Text style={styles.actionItemText}>Manage Order Availability</Text>
+                </View>
+                <Text style={styles.actionItemArrow}>›</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Account Actions Card */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
