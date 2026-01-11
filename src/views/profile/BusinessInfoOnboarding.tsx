@@ -921,6 +921,8 @@ const BusinessInfoOnboarding: React.FC = () => {
         style={[styles.input, errors.ownerName && styles.inputError]}
         placeholder="Enter owner full name"
         placeholderTextColor={Colors.inputPlaceholder}
+        autoCapitalize="none"
+        autoCorrect={false}
       />
       {errors.ownerName && <Text style={styles.errorText}>{errors.ownerName}</Text>}
 
@@ -940,6 +942,8 @@ const BusinessInfoOnboarding: React.FC = () => {
         style={[styles.input, errors.businessName && styles.inputError]}
         placeholder="Shop or brand name customers will see"
         placeholderTextColor={Colors.inputPlaceholder}
+        autoCapitalize="none"
+        autoCorrect={false}
       />
       {errors.businessName && <Text style={styles.errorText}>{errors.businessName}</Text>}
 
@@ -963,6 +967,8 @@ const BusinessInfoOnboarding: React.FC = () => {
         value={businessDescription}
         onChangeText={setBusinessDescription}
         style={[styles.input, styles.textArea]}
+        autoCapitalize="none"
+        autoCorrect={false}
         placeholder="Short intro about your shop or services"
         placeholderTextColor={Colors.inputPlaceholder}
         multiline

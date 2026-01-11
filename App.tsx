@@ -13,6 +13,7 @@ import {
 import AppRootNavigator from './src/routes';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './src/context/AuthContext';
+import { ModalProvider } from './src/context/ModalContext';
 import FlashMessage from 'react-native-flash-message';
 
 function App() {
@@ -29,10 +30,12 @@ function AppContent() {
   return (
     <View style={styles.container}>
       <AuthProvider>
-        <NavigationContainer>
-          <AppRootNavigator />
-        </NavigationContainer>
-        <FlashMessage position="top" />
+        <ModalProvider>
+          <NavigationContainer>
+            <AppRootNavigator />
+          </NavigationContainer>
+          <FlashMessage position="top" />
+        </ModalProvider>
       </AuthProvider>
     </View>
   );

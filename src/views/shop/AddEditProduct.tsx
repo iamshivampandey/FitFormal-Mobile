@@ -375,6 +375,8 @@ const AddEditProduct: React.FC<AddEditProductProps> = ({ navigation, route }) =>
         numberOfLines={options?.multiline ? 4 : 1}
         keyboardType={options?.keyboardType || 'default'}
         maxLength={options?.maxLength}
+        autoCapitalize="none"
+        autoCorrect={false}
       />
       {options?.maxLength && options?.multiline && (
         <Text style={styles.charCount}>{value.length}/{options.maxLength}</Text>

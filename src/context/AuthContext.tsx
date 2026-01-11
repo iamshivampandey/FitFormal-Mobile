@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-export type UserRole = 'customer' | 'tailor' | 'tailor_shop' | 'shop';
+export type UserRole = 'customer' | 'tailor' | 'tailor_shop' | 'shop' | 'measurement_boy';
 
 export type AuthContextValue = {
   isAuthenticated: boolean;

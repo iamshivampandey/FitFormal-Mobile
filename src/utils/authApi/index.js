@@ -2,21 +2,6 @@ import AxiosConfig from "../api";
 import StorageService from "../../services/storage.service";
 import { getFrontendRoleId, getBackendRoleName } from "../constants/roles";
 
-/**
- * Convert frontend role name to backend role name string
- * Frontend: 'customer', 'shop', 'tailor', 'tailor_shop'
- * Backend expects: 'Customer', 'Seller', 'Tailor', 'Taylorseller'
- */
-const getBackendRoleNameString = (frontendRole) => {
-  const roleMap = {
-    'customer': 'Customer',
-    'shop': 'Seller',
-    'tailor': 'Tailor',
-    'tailor_shop': 'Taylorseller',
-    'admin': 'Admin',
-  };
-  return roleMap[frontendRole?.toLowerCase()] || 'Customer';
-};
 
 /**
  * Sign up a new user with email and password
@@ -43,7 +28,7 @@ export const signUpWithEmailAndPassword = async (params) => {
       firstName: params.firstName,
       lastName: params.lastName,
       phoneNumber: params.phoneNumber,
-      roleName: backendRoleName, // Send role name string as API expects
+      roleName: params.roleName, // Send role name string as API expects
     };
 
     // If business info exists, add it to the signup payload
@@ -55,7 +40,6 @@ export const signUpWithEmailAndPassword = async (params) => {
 
     console.log("🚀 Making API call to /api/auth/signup");
     console.log("📦 Complete signup payload:", payload);
-    console.log("Role mapping:", params.roleName, "->", backendRoleName);
     
     const response = await AxiosConfig.post("/api/auth/signup", payload);
 

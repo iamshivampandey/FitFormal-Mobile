@@ -212,6 +212,8 @@ const BookMeasurementScreen: React.FC = () => {
           placeholderTextColor={Colors.grey}
           value={searchQuery}
           onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         <TouchableOpacity style={styles.searchButton}>
           <Text style={styles.searchIcon}>🔍</Text>

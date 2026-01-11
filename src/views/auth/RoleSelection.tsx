@@ -26,14 +26,16 @@ interface UserRole {
 
 const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedSellerSubRole, setSelectedSellerSubRole] = useState<string | null>(null);
+  const [showSellerSubRoles, setShowSellerSubRoles] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const userRoles: UserRole[] = [
+  const mainRoles: UserRole[] = [
     {
-      id: 'customer',
+      id: 'Customer',
       title: 'Customer',
       description: 'Buy formal fabric and get custom clothing',
-      icon: Images.person_icon, // TODO: Replace with shirt/suit icon when available
+      icon: Images.person_icon,
       benefits: [
         'Browse and purchase formal fabrics online',
         'Book home measurement service',
@@ -44,10 +46,41 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
       color: '#4CAF50'
     },
     {
-      id: 'shop',
+      id: 'Seller',
+      title: 'Seller',
+      description: 'Sell products or provide services',
+      icon: Images.shopping_bag,
+      benefits: [
+        'Choose your seller type below',
+        'Shop Owner, Tailor, or Tailor + Shop',
+        'Manage your business online',
+        'Grow your customer base',
+        'Track your earnings'
+      ],
+      color: '#FF9800'
+    },
+    {
+      id: 'MeasurementBoy',
+      title: 'Measurement Boy',
+      description: 'Provide measurement services for customers',
+      icon: Images.person_icon,
+      benefits: [
+        'Visit customer homes for measurements',
+        'Take accurate body measurements',
+        'Manage your measurement appointments',
+        'Earn from measurement services',
+        'Flexible work schedule'
+      ],
+      color: '#00BCD4'
+    }
+  ];
+
+  const sellerSubRoles: UserRole[] = [
+    {
+      id: 'Seller',
       title: 'Shop Owner',
       description: 'Sell formal fabrics and accessories',
-      icon: Images.shopping_bag, // TODO: Replace with store icon when available
+      icon: Images.shopping_bag,
       benefits: [
         'List and sell formal fabrics online',
         'Manage your product inventory',
@@ -58,7 +91,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
       color: '#FF9800'
     },
     {
-      id: 'tailor',
+      id: 'Tailor',
       title: 'Tailor',
       description: 'Provide measurement and stitching services',
       icon: Images.scissor_icon,
@@ -72,10 +105,10 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
       color: '#2196F3'
     },
     {
-      id: 'tailor_shop',
+      id: 'Taylorseller',
       title: 'Tailor + Shop',
       description: 'Complete end-to-end formal wear service',
-      icon: Images.shopping_bag, // TODO: Replace with shop icon when available
+      icon: Images.shopping_bag,
       benefits: [
         'Bring fabric samples to customers',
         'Take measurements at home',
@@ -88,14 +121,46 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
   ];
 
   const handleRoleSelection = (roleId: string) => {
-    setSelectedRole(roleId);
+    console.log('Selected role:', roleId);
+    
+    if (roleId === 'Seller') {
+      // Show seller sub-roles
+      setShowSellerSubRoles(true);
+      setSelectedRole('Seller');
+      setSelectedSellerSubRole(null);
+    } else {
+      // For Customer or Measurement Boy, proceed normally
+      setShowSellerSubRoles(false);
+      setSelectedRole(roleId);
+      setSelectedSellerSubRole(null);
+    }
+  };
+
+  const handleSellerSubRoleSelection = (subRoleId: string) => {
+    console.log('Selected seller sub-role:', subRoleId);
+    setSelectedSellerSubRole(subRoleId);
+  };
+
+  const handleBackToMainRoles = () => {
+    setShowSellerSubRoles(false);
+    setSelectedRole(null);
+    setSelectedSellerSubRole(null);
   };
 
   const handleContinue = () => {
-    if (selectedRole) {
+    // Determine which role to use
+    let finalRole = selectedRole;
+    let finalRoleData = mainRoles.find(role => role.id === selectedRole);
+    
+    if (selectedRole === 'Seller' && selectedSellerSubRole) {
+      finalRole = selectedSellerSubRole;
+      finalRoleData = sellerSubRoles.find(role => role.id === selectedSellerSubRole);
+    }
+    
+    if (finalRole) {
       navigation.navigate('SignUp', { 
-        userRole: selectedRole,
-        roleData: userRoles.find(role => role.id === selectedRole)
+        userRole: finalRole,
+        roleData: finalRoleData
       });
     }
   };
@@ -158,9 +223,68 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
           </View>
 
           {/* Role Cards */}
-          <View style={styles.rolesContainer}>
-            {userRoles.map(renderRoleCard)}
-          </View>
+          {!showSellerSubRoles ? (
+            <View style={styles.rolesContainer}>
+              {mainRoles.map(renderRoleCard)}
+            </View>
+          ) : (
+            <View style={styles.rolesContainer}>
+              {/* Back Button */}
+              <TouchableOpacity
+                style={styles.backToMainButton}
+                onPress={handleBackToMainRoles}
+              >
+                <Image source={Images.arrow_left} style={styles.backArrowIcon} />
+                <Text style={styles.backToMainText}>Back to Roles</Text>
+              </TouchableOpacity>
+              
+              {/* Seller Sub-Roles */}
+              <Text style={styles.subRolesTitle}>Choose Your Seller Type</Text>
+              {sellerSubRoles.map((subRole) => {
+                const isSelected = selectedSellerSubRole === subRole.id;
+                return (
+                  <TouchableOpacity
+                    key={subRole.id}
+                    style={[
+                      styles.roleCard,
+                      isSelected && styles.selectedRoleCard,
+                      { borderColor: isSelected ? Colors.warmBrownColor : Colors.inputBorderColor }
+                    ]}
+                    onPress={() => handleSellerSubRoleSelection(subRole.id)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.roleHeader}>
+                      <View style={[styles.iconContainer, { backgroundColor: Colors.warmBrownColor }]}>
+                        <Image source={subRole.icon} style={styles.roleIcon} />
+                      </View>
+                      <View style={styles.roleInfo}>
+                        <Text style={[styles.roleTitle, isSelected && { color: Colors.warmBrownColor }]}>
+                          {subRole.title}
+                        </Text>
+                        <Text style={styles.roleDescription}>{subRole.description}</Text>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.benefitsContainer}>
+                      <Text style={styles.benefitsTitle}>What you get:</Text>
+                      {subRole.benefits.map((benefit, index) => (
+                        <View key={index} style={styles.benefitItem}>
+                          <View style={styles.checkIconContainer}>
+                            <Text style={styles.benefitBullet}>✓</Text>
+                          </View>
+                          <Text style={styles.benefitText}>{benefit}</Text>
+                        </View>
+                      ))}
+                    </View>
+                    
+                    {isSelected && (
+                      <View style={[styles.selectedIndicator, { backgroundColor: Colors.warmBrownColor }]} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
 
           {/* Additional Info */}
           <View style={styles.infoContainer}>
@@ -178,7 +302,7 @@ const RoleSelection: React.FC<{ navigation: any }> = ({ navigation }) => {
         <CustomButton
           title="Continue to Sign Up"
           onPress={handleContinue}
-          disabled={!selectedRole}
+          disabled={!selectedRole || (selectedRole === 'Seller' && !selectedSellerSubRole)}
           style={styles.continueButton}
         />
         
@@ -357,6 +481,31 @@ const styles = StyleSheet.create({
     color: Colors.warmBrownColor,
     fontWeight: '500',
     fontFamily: GILROY_MEDIUM,
+  },
+  backToMainButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 10,
+  },
+  backArrowIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+    tintColor: Colors.warmBrownColor,
+  },
+  backToMainText: {
+    fontSize: 16,
+    color: Colors.warmBrownColor,
+    fontWeight: '600',
+    fontFamily: GILROY_SEMIBOLD,
+  },
+  subRolesTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 20,
+    fontFamily: GILROY_BOLD,
   },
 });
 

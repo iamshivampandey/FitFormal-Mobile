@@ -1,5 +1,4 @@
 import {
-  Alert,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -34,6 +33,7 @@ import CustomButton from '../../components/CustomButton';
 import CustomInput from '../../components/CustomInput';
 import { google_icon } from '../../utils/images';
 import { useAuth, UserRole } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
 import { signInWithEmailAndPassword } from '../../utils/authApi';
 import StorageService from '../../services/storage.service';
 import { getBackendRoleName } from '../../utils/constants/roles';
@@ -42,12 +42,12 @@ import LoadingOverlay from '../../components/LoadingOverlay';
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('Itsshivampandey551@gmail.com');
   const [password, setpassword] = useState('Topbox@012');
-  const [passwordHide, setpasswordHide] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('customer');
   const { signIn } = useAuth();
+  const { showError, showSuccess } = useModal();
 
   const isValid = () => {
     if (email === '' || password === '') {
@@ -105,7 +105,7 @@ const LoginScreen = ({ navigation }: any) => {
         // Validate user data
         if (!user || !user.email || !user.firstName) {
           setLoading(false);
-          Alert.alert('Error', 'Invalid user data received from server');
+          showError('Invalid user data received from server');
           console.error('❌ Invalid user data:', user);
           return;
         }
@@ -147,6 +147,8 @@ const LoginScreen = ({ navigation }: any) => {
             userRole = 'tailor';
           } else if (roleName === 'Taylorseller' || roleName === 'TailorSeller') {
             userRole = 'tailor_shop';
+          } else if (roleName === 'MeasurementBoy' || roleName === 'Measurement Boy') {
+            userRole = 'measurement_boy';
           } else {
             // Try lowercase conversion as fallback
             userRole = roleName.toLowerCase() as UserRole;
@@ -171,38 +173,33 @@ const LoginScreen = ({ navigation }: any) => {
         const displayName = `${user?.firstName} ${user?.lastName}`;
         const roleDisplay = primaryRole?.name || userRole;
         
-        Alert.alert(
-          `Welcome ${displayName}!`,
+        showSuccess(
           `Logged in as ${roleDisplay}`,
-          [
-            {
-              text: 'Continue',
-              onPress: () => {
-                console.log('🚀 Navigating to TabBarNavigation...');
-                // Navigate to parent navigator (AppRootNavigator) and reset to TabBarNavigation
-                const parentNavigator = navigation.getParent();
-                if (parentNavigator) {
-                  parentNavigator.reset({
-                    index: 0,
-                    routes: [{ name: 'TabBarNavigation' }],
-                  });
-                } else {
-                  // Fallback: Just navigate without reset
-                  navigation.navigate('TabBarNavigation' as never);
-                }
-              }
+          `Welcome ${displayName}!`,
+          () => {
+            console.log('🚀 Navigating to TabBarNavigation...');
+            // Navigate to parent navigator (AppRootNavigator) and reset to TabBarNavigation
+            const parentNavigator = navigation.getParent();
+            if (parentNavigator) {
+              parentNavigator.reset({
+                index: 0,
+                routes: [{ name: 'TabBarNavigation' }],
+              });
+            } else {
+              // Fallback: Just navigate without reset
+              navigation.navigate('TabBarNavigation' as never);
             }
-          ]
+          }
         );
       } else {
         setLoading(false);
-        Alert.alert('Error', 'Invalid response from server');
+        showError('Invalid response from server');
       }
     } catch (e: any) {
       setLoading(false);
       console.error('❌ Login Error:', e);
       const errorMessage = e.response?.data?.message || e.message || 'Login failed. Please check your credentials.';
-      Alert.alert('Login Failed', errorMessage);
+      showError(errorMessage, 'Login Failed');
     }
   };
 
@@ -234,48 +231,7 @@ const LoginScreen = ({ navigation }: any) => {
           </Text>
         </View>
 
-        {/* Role Selector for Testing */}
-        <View style={styles.roleSelector}>
-          <Text style={styles.roleSelectorLabel}>Select Role (Testing):</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.roleButtons}
-          >
-            <TouchableOpacity
-              style={[styles.roleButton, selectedRole === 'customer' && styles.roleButtonActive]}
-              onPress={() => setSelectedRole('customer')}
-            >
-              <Text style={[styles.roleButtonText, selectedRole === 'customer' && styles.roleButtonTextActive]}>
-                👔 Customer
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.roleButton, selectedRole === 'shop' && styles.roleButtonActive]}
-              onPress={() => setSelectedRole('shop')}
-            >
-              <Text style={[styles.roleButtonText, selectedRole === 'shop' && styles.roleButtonTextActive]}>
-                🏬 Shop Owner
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.roleButton, selectedRole === 'tailor' && styles.roleButtonActive]}
-              onPress={() => setSelectedRole('tailor')}
-            >
-              <Text style={[styles.roleButtonText, selectedRole === 'tailor' && styles.roleButtonTextActive]}>
-                ✂️ Tailor
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.roleButton, selectedRole === 'tailor_shop' && styles.roleButtonActive]}
-              onPress={() => setSelectedRole('tailor_shop')}
-            >
-              <Text style={[styles.roleButtonText, selectedRole === 'tailor_shop' && styles.roleButtonTextActive]}>
-                🏪 Shop + Tailor
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
+      
 
         <View style={styles.EmailInput}></View>
 
@@ -288,36 +244,20 @@ const LoginScreen = ({ navigation }: any) => {
           }}
           error={emailError}
         />
-        <TouchableOpacity style={styles.PasswordInput}>
-          <TextInput
+        <CustomInput
+          placeholder={palceholders.PASSWORD}
           value={password}
-            style={styles.PasswordText}
-            secureTextEntry={!passwordHide}
-            placeholder={palceholders.PASSWORD}
-            placeholderTextColor={Colors.grey}
-            autoCapitalize="none"
-            autoCorrect={false}
-            enablesReturnKeyAutomatically
-            onChangeText={text => {
-              setpassword(text);
-            }}
-          />
-          <TouchableOpacity
-            onPress={() => {
-              setpasswordHide(!passwordHide);
-            }}
-          >
-            {/* {passwordHide ? (
-              <VectorImage
-                source={hide}
-                style={styles.ViewImg}
-                tintColor={"black"}
-              />
-            ) : (
-              <VectorImage source={eye_view} style={styles.ViewImg} />
-            )} */}
-          </TouchableOpacity>
-        </TouchableOpacity>
+          onChangeText={(text) => {
+            setpassword(text);
+            setPasswordError('');
+          }}
+          error={passwordError}
+          secureTextEntry={true}
+          showPasswordToggle={true}
+          autoCapitalize="none"
+          autoCorrect={false}
+          enablesReturnKeyAutomatically
+        />
         <CustomButton
           title={strings.LOGIN}
           onPress={onPressSignIn}

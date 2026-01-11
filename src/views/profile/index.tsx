@@ -6,7 +6,6 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Dimensions,
   Image,
@@ -20,6 +19,7 @@ import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
 import StorageService from '../../services/storage.service';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
 import { logoutUser } from '../../utils/authApi';
 import { getBackendRoleName } from '../../utils/constants/roles';
 import { getBusinessInfo } from '../../utils/api/businessApi';
@@ -40,6 +40,7 @@ interface UserData {
 export default function Profile({ navigation }: any): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { signOut, userRole } = useAuth();
+  const { showError, showSuccess, showConfirm } = useModal();
   
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
   // Load business info when screen focuses
   useFocusEffect(
     React.useCallback(() => {
-      if (userRole !== 'customer') {
+      if (userRole !== 'customer' && userRole !== 'measurement_boy' && userRole !== 'MeasurementBoy') {
         loadBusinessInfo();
       }
     }, [userRole])
@@ -97,7 +98,7 @@ export default function Profile({ navigation }: any): React.JSX.Element {
         // Check if user object exists and has required fields
         if (!user || typeof user !== 'object') {
           console.error('❌ Invalid user data structure:', user);
-          Alert.alert('Error', 'Invalid user data. Please login again.');
+          showError('Invalid user data. Please login again.');
           setLoading(false);
           return;
         }
@@ -142,11 +143,11 @@ export default function Profile({ navigation }: any): React.JSX.Element {
         });
       } else {
         console.warn('⚠️ No user data found in storage');
-        Alert.alert('No Data', 'Please login again to load your profile.');
+        showError('Please login again to load your profile.', 'No Data');
       }
     } catch (error) {
       console.error('❌ Error loading user data:', error);
-      Alert.alert('Error', 'Failed to load user data');
+      showError('Failed to load user data');
     } finally {
       setLoading(false);
     }
@@ -160,6 +161,8 @@ export default function Profile({ navigation }: any): React.JSX.Element {
       'tailor_shop': '🏪✂️ Tailor + Shop',
       'admin': '⚙️ Administrator',
       'seller': '🏪 Seller', // Map API "Seller" as well
+      'measurement_boy': '📏 Measurement Boy',
+      'measurementboy': '📏 Measurement Boy',
     };
     return roleMap[role.toLowerCase()] || role;
   };
@@ -262,11 +265,11 @@ export default function Profile({ navigation }: any): React.JSX.Element {
 
       setSaving(false);
       setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully!');
+      showSuccess('Profile updated successfully!');
     } catch (error) {
       setSaving(false);
       console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to update profile');
+      showError('Failed to update profile');
     }
   };
 
@@ -276,41 +279,33 @@ export default function Profile({ navigation }: any): React.JSX.Element {
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
+    showConfirm(
       'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logoutUser();
-              await StorageService.clearStorage();
-              signOut();
-              
-              // Navigate to root navigator and reset to AuthStackNavigation
-              const rootNavigator = navigation.getParent()?.getParent();
-              if (rootNavigator) {
-                rootNavigator.reset({
-                  index: 0,
-                  routes: [{ name: 'AuthStackNavigation' }],
-                });
-              } else {
-                // Fallback: navigate without reset
-                navigation.navigate('AuthStackNavigation' as never);
-              }
-            } catch (error) {
-              console.error('Logout error:', error);
-              Alert.alert('Error', 'Failed to logout');
-            }
-          },
-        },
-      ]
+      async () => {
+        try {
+          await logoutUser();
+          await StorageService.clearStorage();
+          signOut();
+          
+          // Navigate to root navigator and reset to AuthStackNavigation
+          const rootNavigator = navigation.getParent()?.getParent();
+          if (rootNavigator) {
+            rootNavigator.reset({
+              index: 0,
+              routes: [{ name: 'AuthStackNavigation' }],
+            });
+          } else {
+            // Fallback: navigate without reset
+            navigation.navigate('AuthStackNavigation' as never);
+          }
+        } catch (error) {
+          console.error('Logout error:', error);
+          showError('Failed to logout');
+        }
+      },
+      'Logout',
+      'Logout',
+      'Cancel'
     );
   };
 

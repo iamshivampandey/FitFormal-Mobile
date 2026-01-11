@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -15,11 +14,15 @@ import { palceholders, strings } from "../../utils/string/strings";
 import en from "../../utils/string/en";
 import CustomButton from "../../components/CustomButton";
 import CustomInput from "../../components/CustomInput";
+import { useModal } from "../../context/ModalContext";
 import { signUpWithEmailAndPassword } from "../../utils/authApi";
 import { GILROY_BOLD, GILROY_SEMIBOLD, GILROY_REGULAR, GILROY_MEDIUM } from "../../utils/fonts";
 
 const SignUp = ({ navigation, route }: any) => {
   const { userRole, roleData } = route.params || {};
+  const { showError, showSuccess } = useModal();
+  console.log('userRole', userRole);
+  console.log('roleData', roleData);
   const [name, setName] = useState("");
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
@@ -92,7 +95,7 @@ const SignUp = ({ navigation, route }: any) => {
     
     if (valid) {
       if (!isSelected) {
-        Alert.alert("Terms required", "You must agree to the Terms & Privacy");
+        showError("You must agree to the Terms & Privacy", "Terms required");
         return;
       } else {
         setCheckboxError("");
@@ -136,7 +139,7 @@ const SignUp = ({ navigation, route }: any) => {
 
         // For business users (shop, tailor, tailor_shop), navigate to BusinessInfoOnboarding first
         // Business info will be collected and sent with signup API call
-        if (userRole === 'shop' || userRole === 'tailor' || userRole === 'tailor_shop') {
+        if (userRole === 'Seller' || userRole === 'Tailor' || userRole === 'Taylorseller') {
           navigation.navigate("BusinessInfoOnboarding", {
             role: userRole,
             signUpData: {
@@ -152,6 +155,8 @@ const SignUp = ({ navigation, route }: any) => {
             },
           });
         } else {
+          console.log('userRole', userRole);
+          console.log('roleData', roleData);
           // For regular customers, call signup API directly (no business info)
           const signupData = {
             email: email.trim(),
@@ -160,7 +165,7 @@ const SignUp = ({ navigation, route }: any) => {
             lastName: nameParts.slice(1).join(" ") || nameParts[0] || "",
             phoneNumber: phoneNumber.trim(),
             age: age.trim(),
-            roleName: userRole || 'customer',
+            roleName: userRole || 'Customer',
           };
 
           console.log("Attempting customer signup with data:", { ...signupData, password: '***' });
@@ -170,27 +175,36 @@ const SignUp = ({ navigation, route }: any) => {
           setLoading(false);
           
           if (response.data) {
-            Alert.alert(
-              "Success", 
-              `Account created successfully as ${roleData?.title || 'Customer'}! Please verify your OTP.`,
-              [
-                {
-                  text: "OK",
-                  onPress: () => {
-                    navigation.navigate("OtpVerification", {
-                      data: { email, name, userName, age, userRole },
-                      type: 'signUp'
-                    });
-                  }
+            // Skip OTP verification for measurement_boy role
+            if (userRole === 'MeasurementBoy') {
+              showSuccess(
+                `Account created successfully as ${roleData?.title || 'Measurement Boy'}!`,
+                "Success",
+                () => {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'SignIn' }],
+                  });
                 }
-              ]
-            );
+              );
+            } else {
+              showSuccess(
+                `Account created successfully as ${roleData?.title || 'Customer'}! Please verify your OTP.`,
+                "Success",
+                () => {
+                  navigation.navigate("OtpVerification", {
+                    data: { email, name, userName, age, userRole },
+                    type: 'signUp'
+                  });
+                }
+              );
+            }
           }
         }
       } catch (e: any) {
         setLoading(false);
         const errorMessage = e.response?.data?.message || e.message || en.InternalServerError;
-        Alert.alert("Signup Failed", errorMessage);
+        showError(errorMessage, "Signup Failed");
       }
     }
   };
@@ -288,6 +302,7 @@ const SignUp = ({ navigation, route }: any) => {
             }}
             error={passwordError}
             secureTextEntry={true}
+            showPasswordToggle={true}
           />
 
           <View style={styles.checkbox}>

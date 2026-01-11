@@ -331,6 +331,8 @@ const CustomerHomeScreen: React.FC = () => {
               placeholderTextColor={Colors.grey}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              autoCorrect={false}
             />
             <TouchableOpacity style={styles.searchButton}>
               <Image source={Images.search_icon} style={styles.searchIconImage} />

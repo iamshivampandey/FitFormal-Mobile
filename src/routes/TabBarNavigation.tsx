@@ -236,7 +236,7 @@ export default function TabBarNavigation(): React.JSX.Element {
   }
 
   // Shop + Tailor tabs
-  if (userRole === 'tailor_shop') {
+  if (userRole === 'tailor_shop' || userRole === 'Taylorseller') {
     return (
       <TabBar.Navigator screenOptions={commonScreenOptions}>
         <TabBar.Screen
@@ -275,6 +275,41 @@ export default function TabBarNavigation(): React.JSX.Element {
             tabBarIcon: ({ focused, size }) => (
               <Icon
                 name={focused ? 'cut' : 'cut-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+        <TabBar.Screen
+          name="Profile"
+          component={ProfileStackNavigation}
+          options={{
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'person' : 'person-outline'}
+                size={size}
+                color={focused ? Colors.warmBrownColor : Colors.grey}
+              />
+            ),
+          }}
+        />
+      </TabBar.Navigator>
+    );
+  }
+
+  // Measurement Boy tabs
+  if (userRole === 'measurement_boy' || userRole === 'MeasurementBoy') {
+    return (
+      <TabBar.Navigator screenOptions={commonScreenOptions}>
+        <TabBar.Screen
+          name="Dashboard"
+          component={HomeStackNavigation}
+          options={{
+            tabBarLabel: 'Dashboard',
+            tabBarIcon: ({ focused, size }) => (
+              <Icon
+                name={focused ? 'grid' : 'grid-outline'}
                 size={size}
                 color={focused ? Colors.warmBrownColor : Colors.grey}
               />
