@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   USER: '@user',
   TOKEN: '@token',
   ROLE: '@role',
+  DELIVERY_ADDRESSES: '@delivery_addresses',
 };
 
 class StorageService {
@@ -106,6 +107,31 @@ class StorageService {
     } catch (error) {
       console.error('Error checking login status:', error);
       return false;
+    }
+  }
+
+  // Save delivery addresses
+  async saveDeliveryAddresses(addresses) {
+    try {
+      const dataToSave = typeof addresses === 'string' ? addresses : JSON.stringify(addresses);
+      await AsyncStorage.setItem(STORAGE_KEYS.DELIVERY_ADDRESSES, dataToSave);
+      console.log('[Storage] ✓ Delivery addresses saved successfully');
+      return true;
+    } catch (error) {
+      console.error('[Storage] ✗ Error saving delivery addresses:', error);
+      return false;
+    }
+  }
+
+  // Get delivery addresses
+  async getDeliveryAddresses() {
+    try {
+      const addresses = await AsyncStorage.getItem(STORAGE_KEYS.DELIVERY_ADDRESSES);
+      console.log('[Storage] Retrieved delivery addresses:', addresses ? 'Data found' : 'No data');
+      return addresses;
+    } catch (error) {
+      console.error('[Storage] ✗ Error getting delivery addresses:', error);
+      return null;
     }
   }
 }

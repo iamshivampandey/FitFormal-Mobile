@@ -78,7 +78,19 @@ const API_CONFIG = {
     GET_TAILOR_ITEM_PRICES: '/api/tailor-item-prices/business/:businessId',
     SAVE_TAILOR_ITEM_PRICES: '/api/tailor-item-prices',
     SAVE_TAILOR_ITEM_PRICES_BATCH: '/api/tailor-item-prices/batch',
+
+    // Customer delivery address endpoints
+    GET_MY_DELIVERY_ADDRESSES: '/api/my-delivery-addresses',
+    SAVE_DELIVERY_ADDRESS: '/api/delivery-addresses/user', // userId will be appended
+
+    // Tailor order creation (web backend endpoint)
+    CREATE_ORDER_TAILOR: '/api/createOrder',
   },
+
+  // Full URL for create order (if needed to bypass BASE_URL)
+  // Uncomment and set if your createOrder endpoint is on a different domain
+  // CREATE_ORDER_FULL_URL: 'http://localhost:5173/api/createOrder',
+  CREATE_ORDER_FULL_URL: null,
 };
 
 export default API_CONFIG;
